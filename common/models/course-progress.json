@@ -1,0 +1,25 @@
+{
+  "name": "CourseProgress",
+  "plural": "CourseProgresses",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {},
+  "validations": [],
+  "relations": {
+    "Customer": {
+      "type": "belongsTo",
+      "model": "Customer",
+      "foreignKey": "customerId"
+    },
+    "nextLesson": {
+      "type": "hasOne",
+      "model": "Lesson",
+      "foreignKey": "nextLessonId"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

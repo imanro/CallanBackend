@@ -1,0 +1,39 @@
+{
+  "name": "LessonEvent",
+  "plural": "LessonEvents",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "time": {
+      "type": "date",
+      "required": true
+    },
+    "duration": {
+      "type": "number",
+      "default": 0
+    },
+    "state": {
+      "type": "number",
+      "required": true,
+      "default": 0
+    }
+  },
+  "validations": [],
+  "relations": {
+    "Student": {
+      "type": "belongsTo",
+      "model": "Customer",
+      "foreignKey": "studentId"
+    },
+    "Teacher": {
+      "type": "belongsTo",
+      "model": "Customer",
+      "foreignKey": "teacherId"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}
