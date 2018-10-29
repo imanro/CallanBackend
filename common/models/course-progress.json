@@ -6,13 +6,23 @@
   "options": {
     "validateUpsert": true
   },
-  "properties": {},
+  "properties": {
+    "completedLessonEventsCount": {
+      "type": "number",
+      "default": 0
+    }
+  },
   "validations": [],
   "relations": {
     "Customer": {
       "type": "belongsTo",
       "model": "Customer",
       "foreignKey": "customerId"
+    },
+    "Course": {
+      "type": "belongsTo",
+      "model": "Course",
+      "foreignKey": "courseId"
     },
     "nextLesson": {
       "type": "hasOne",
