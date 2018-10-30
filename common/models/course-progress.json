@@ -25,7 +25,7 @@
       "foreignKey": "courseId"
     },
     "nextLesson": {
-      "type": "hasOne",
+      "type": "belongsTo",
       "model": "Lesson",
       "foreignKey": "nextLessonId"
     }

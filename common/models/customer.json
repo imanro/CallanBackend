@@ -18,11 +18,6 @@
   },
   "validations": [],
   "relations": {
-    "lessonEvents": {
-      "type": "hasMany",
-      "model": "LessonEvent",
-      "foreignKey": ""
-    },
     "roles": {
       "type": "hasMany",
       "model": "Role",

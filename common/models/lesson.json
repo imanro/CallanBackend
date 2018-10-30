@@ -13,7 +13,13 @@
     }
   },
   "validations": [],
-  "relations": {},
+  "relations": {
+    "Course": {
+      "type": "belongsTo",
+      "model": "Course",
+      "foreignKey": "courseId"
+    }
+  },
   "acls": [],
   "methods": {}
 }

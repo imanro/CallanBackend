@@ -7,7 +7,7 @@
     "validateUpsert": true
   },
   "properties": {
-    "time": {
+    "startTime": {
       "type": "date",
       "required": true
     },
@@ -23,6 +23,16 @@
   },
   "validations": [],
   "relations": {
+    "CourseProgress": {
+      "type": "belongsTo",
+      "model": "CourseProgress",
+      "foreignKey": "courseProgressId"
+    },
+    "Lesson": {
+      "type": "belongsTo",
+      "model": "Lesson",
+      "foreignKey": "lessonId"
+    },
     "Student": {
       "type": "belongsTo",
       "model": "Customer",

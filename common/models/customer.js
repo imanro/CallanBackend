@@ -34,7 +34,6 @@ module.exports = function (Customer) {
         if (data.roles && data.roles.length) {
           console.log('roles given', data.roles);
 
-
           var roleData = [];
 
           for (var i in data.roles) {
