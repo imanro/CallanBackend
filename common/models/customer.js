@@ -2,13 +2,13 @@
 
 var utils = require('loopback-datasource-juggler/lib/utils');
 
-module.exports = function (Customer) {
+module.exports = function(Customer) {
 
-  Customer.on('dataSourceAttached', function () {
+  Customer.on('dataSourceAttached', function() {
 
     var override = Customer.create;
 
-    Customer.create = function (data, options, cb) {
+    Customer.create = function(data, options, cb) {
 
       // will work only here
       var app = Customer.app;
@@ -23,7 +23,7 @@ module.exports = function (Customer) {
       var self = this;
       var id = null;
 
-      override.call(self, data, options, function (err, modelInstance) {
+      override.call(self, data, options, function(err, modelInstance) {
 
         if (err) {
           return cb(err);
@@ -44,12 +44,12 @@ module.exports = function (Customer) {
 
           console.log('We are going to add folowing roles:', roleData);
 
-          RoleMapping.create(roleData, function (err) {
+          RoleMapping.create(roleData, function(err) {
             if (err) {
               return cb(err);
             }
 
-            Customer.findById(id, {include: ['roles']}, function (err, modelInstance) {
+            Customer.findById(id, {include: ['roles']}, function(err, modelInstance) {
               return cb(err, modelInstance);
             });
           });
