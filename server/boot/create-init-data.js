@@ -3,6 +3,23 @@
 
 module.exports = function(app) {
 
+  var Customer = app.models.Customer;
+
+  /*
+  Customer.find(function(err, instances) {
+    for (var i in instances) {
+      if (instances.hasOwnProperty(i)) {
+        const customer = instances[i];
+
+        var lessonBalanceData = {customerId: customer.id, amount: 0};
+        LessonBalance.create(lessonBalanceData, function(err) {
+          console.log('Lesson balance for user', customer.id, 'created!');
+        });
+      }
+    }
+  });
+  */
+
   /*
   app.models.Role.create([{
     name: 'admin'

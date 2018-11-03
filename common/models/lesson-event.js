@@ -1,9 +1,60 @@
 'use strict';
 
+const HttpErrors = require('http-errors');
+
 var LessonEventState = require('../enums/lesson-event.state');
 var RoleName = require('../enums/role.name');
 
 module.exports = function(LessonEvent) {
+
+  LessonEvent.beforeRemote('create', function(ctx, instance, next) {
+    const CourseProgress = LessonEvent.app.models.CourseProgress;
+    const courseProgressId = ctx.args.data.courseProgressId;
+
+    if (courseProgressId) {
+
+      CourseProgress.findById(courseProgressId, function(err, courseProgress) {
+        if (err) {
+          next(err);
+        }
+
+        if (courseProgress.lessonEventsBalance <= 0) {
+          next(new HttpErrors.BadRequest('There is not enough lessons on customer\'s balance!'));
+        } else {
+          next();
+        }
+
+      });
+    } else {
+      next();
+    }
+  });
+
+  LessonEvent.afterRemote('create', function(ctx, instance, next) {
+
+    const CourseProgress = LessonEvent.app.models.CourseProgress;
+
+    const courseProgressId = instance.courseProgressId;
+
+    if (courseProgressId) {
+
+      CourseProgress.findById(courseProgressId, function(err, courseProgress) {
+        if (err) {
+          next(err);
+        }
+
+        courseProgress.lessonEventsBalance -= 1;
+
+        courseProgress.save(function() {
+          console.log('lessonEventsBalance decremented!');
+          next();
+        });
+
+      });
+    } else {
+      next();
+    }
+  });
 
   LessonEvent.beforeRemote('replaceById', function(ctx, instance, next) {
 

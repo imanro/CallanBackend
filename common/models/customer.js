@@ -10,6 +10,7 @@ module.exports = function(Customer) {
 
     Customer.create = function(data, options, cb) {
 
+      // create roles too
       // will work only here
       var app = Customer.app;
       var RoleMapping = app.models.RoleMapping;
@@ -48,10 +49,6 @@ module.exports = function(Customer) {
             if (err) {
               return cb(err);
             }
-
-            Customer.findById(id, {include: ['roles']}, function(err, modelInstance) {
-              return cb(err, modelInstance);
-            });
           });
 
         } else {

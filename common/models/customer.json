@@ -2,6 +2,9 @@
   "name": "Customer",
   "base": "User",
   "idInjection": false,
+  "options": {
+    "caseSensitiveEmail": false
+  },
   "properties": {
     "firstName": {
       "type": "string",
@@ -25,9 +28,6 @@
       "through": "RoleMapping",
       "keyThrough": "roleId"
     }
-  },
-  "options": {
-    "caseSensitiveEmail": false
   },
   "acls": [
     {
