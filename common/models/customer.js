@@ -49,6 +49,9 @@ module.exports = function(Customer) {
             if (err) {
               return cb(err);
             }
+
+            cb();
+            return cb.promise;
           });
 
         } else {

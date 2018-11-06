@@ -61,5 +61,9 @@
   "CourseProgress": {
     "dataSource": "mysqlDs",
     "public": true
+  },
+  "ScheduleRange": {
+    "dataSource": "mysqlDs",
+    "public": true
   }
 }
