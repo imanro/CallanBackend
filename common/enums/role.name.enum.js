@@ -1,6 +1,6 @@
 'use strict';
 
-class RoleName {
+class RoleNameEnum {
   static get ADMIN() {
     return 'admin';
   }
@@ -15,4 +15,4 @@ class RoleName {
   }
 }
 
-module.exports = RoleName;
+module.exports = RoleNameEnum;

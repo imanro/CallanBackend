@@ -1,6 +1,6 @@
 'use strict';
 
-class LessonEventState {
+class LessonEventStateEnum {
   static get PLANNED() {
     return 1;
   }
@@ -12,4 +12,4 @@ class LessonEventState {
   }
 }
 
-module.exports = LessonEventState;
+module.exports = LessonEventStateEnum;

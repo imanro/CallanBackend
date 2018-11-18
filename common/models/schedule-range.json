@@ -5,10 +5,35 @@
   "options": {
     "validateUpsert": true
   },
-  "properties": {},
+  "properties": {
+    "type": {
+      "type": "number",
+      "required": true,
+      "default": 1
+    },
+    "regularity": {
+      "type": "number",
+      "required": true,
+      "default": 1
+    },
+    "startMinutes": {
+      "type": "number",
+      "required": true
+    },
+    "endMinutes": {
+      "type": "number",
+      "required": true
+    },
+    "dayOfWeek": {
+      "type": "number"
+    },
+    "date": {
+      "type": "date"
+    }
+  },
   "validations": [],
   "relations": {
-    "customer": {
+    "Customer": {
       "type": "belongsTo",
       "model": "Customer",
       "foreignKey": "customerId"

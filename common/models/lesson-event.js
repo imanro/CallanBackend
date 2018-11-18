@@ -2,8 +2,8 @@
 
 const HttpErrors = require('http-errors');
 
-var LessonEventState = require('../enums/lesson-event.state');
-var RoleName = require('../enums/role.name');
+var LessonEventState = require('../enums/lesson-event.state.enum');
+var RoleName = require('../enums/role.name.enum');
 
 module.exports = function(LessonEvent) {
 
