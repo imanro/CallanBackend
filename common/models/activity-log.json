@@ -1,0 +1,44 @@
+{
+  "name": "ActivityLog",
+  "plural": "ActivityLogs",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "action": {
+      "type": "string",
+      "required": true
+    },
+    "message": {
+      "type": "string",
+      "required": true
+    },
+    "date": {
+      "type": "date",
+      "required": true,
+      "default": "$now"
+    },
+    "realm": {
+      "type": "number",
+      "required": true,
+      "default": 1
+    }
+  },
+  "validations": [],
+  "relations": {
+    "Initiator": {
+      "type": "belongsTo",
+      "model": "Customer",
+      "foreignKey": "initiatorId"
+    },
+    "Affected": {
+      "type": "belongsTo",
+      "model": "Customer",
+      "foreignKey": "affectedId"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

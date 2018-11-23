@@ -3,133 +3,188 @@
 const HttpErrors = require('http-errors');
 
 var LessonEventState = require('../enums/lesson-event.state.enum');
-var RoleName = require('../enums/role.name.enum');
+const container = require('../conf/configure-container');
 
-module.exports = function(LessonEvent) {
+/** @type LessonEventService */
+const lessonEventService = container.resolve('lessonEventService');
+/** @type UserService */
+const userService = container.resolve('userService');
 
-  LessonEvent.beforeRemote('create', function(ctx, instance, next) {
-    const CourseProgress = LessonEvent.app.models.CourseProgress;
-    const courseProgressId = ctx.args.data.courseProgressId;
+/** @type ActivityLogService */
+const activityLogService = container.resolve('activityLogService');
 
-    if (courseProgressId) {
+module.exports = function(LessonEventModel) {
 
-      CourseProgress.findById(courseProgressId, function(err, courseProgress) {
-        if (err) {
-          next(err);
-        }
+  LessonEventModel.beforeRemote('create',  async function(ctx) {
 
-        if (courseProgress.lessonEventsBalance <= 0) {
-          next(new HttpErrors.BadRequest('There is not enough lessons on customer\'s balance!'));
+    return new Promise((resolve, reject) => {
+      const courseProgressId = ctx.args.data.courseProgressId;
+
+      lessonEventService.isEnoughtLessonEventsBalance(courseProgressId).then(value => {
+
+        if(value) {
+          resolve();
         } else {
-          next();
+          reject(new HttpErrors.BadRequest('There is not enough lessons on customer\'s balance!'));
         }
 
-      });
-    } else {
-      next();
-    }
+      }, err => {
+        console.warn('An error occured:', err);
+        reject(new HttpErrors.BadRequest('Something went wrong during the lesson balance checking', err));
+      })
+    });
   });
 
-  LessonEvent.afterRemote('create', function(ctx, instance, next) {
+  LessonEventModel.afterRemote('create', async function(ctx, instance) {
 
-    const CourseProgress = LessonEvent.app.models.CourseProgress;
+    return new Promise((resolve, reject) => {
 
-    const courseProgressId = instance.courseProgressId;
+      lessonEventService.getLessonEventsBalance(instance.courseProgressId)
+        .then(previousBalance => {
 
-    if (courseProgressId) {
+          lessonEventService.decrementLessonEventsBalance(instance.courseProgressId)
+            .then(currentBalance => {
+              console.log('Balance decremented');
+              const initiatorId = userService.getUserIdByToken(ctx.req.accessToken);
+              activityLogService.logBalanceSpend(
+                initiatorId,
+                instance.studentId,
+                instance.id,
+                previousBalance,
+                currentBalance
+              )
+                .then(() => {
+                  resolve();
+                }, err => {
+                  console.warn('An error occurred during the log creation', err);
+                  resolve();
+                });
 
-      CourseProgress.findById(courseProgressId, function(err, courseProgress) {
-        if (err) {
-          next(err);
-        }
+            }, err => {
+              console.warn('Error occurred', err);
+              resolve();
+            });
 
-        courseProgress.lessonEventsBalance -= 1;
-
-        courseProgress.save(function() {
-          console.log('lessonEventsBalance decremented!');
-          next();
+        }, err => {
+          console.warn('An error occurred', err);
         });
-
-      });
-    } else {
-      next();
-    }
+    });
   });
 
-  LessonEvent.beforeRemote('replaceById', function(ctx, instance, next) {
+  LessonEventModel.beforeRemote('replaceById', async function(ctx) {
 
-    const Role = LessonEvent.app.models.Role;
-    const Customer = LessonEvent.app.models.Customer;
-    const RoleMapping = LessonEvent.app.models.RoleMapping;
+    return new Promise((resolve, reject) => {
 
-    var id = ctx.args.id;
+      LessonEventModel.findById(ctx.args.id).then(exLesson => {
 
-    // find the previous instance of the model with such id
-    LessonEvent.findById(id, function(err, exLesson) {
+        if (!exLesson) {
+          reject('Could\'nt find the lesson event');
+        }
 
-      if (err) {
-        next(err);
-      }
 
-      if(exLesson) {
-        console.log('Found:', exLesson);
+        if (!ctx.args.data.state) {
+          resolve();
+        }
 
-        if (ctx.args.data.state) {
-          var newState = parseInt(ctx.args.data.state);
-          if (newState === LessonEventState.STARTED && exLesson.state === LessonEventState.PLANNED) {
-            console.log('User trying to start event lesson; Checking, if this lesson has the teacher');
+        // for logging purposes
+        ctx.args.data.previousInstance = exLesson;
+        const newState = parseInt(ctx.args.data.state);
 
-            if (!ctx.args.data.teacherId && !exLesson.teacherId) {
-              console.log('This lesson has\'nt teacher. Try to find free one');
+        if (newState === LessonEventState.STARTED && exLesson.state === LessonEventState.PLANNED) {
 
-              // searching for teacher role id:
-              Role.findOne({where: {name: RoleName.TEACHER}}, function(err, role) {
-                if (err) {
-                  next(err);
+          console.log('User trying to start event lesson; Checking, if this lesson has the teacher');
+
+          if (!ctx.args.data.teacherId && !exLesson.teacherId) {
+            console.log('This lesson didn\'t have the teacher. Try to find free one');
+
+            userService.findFreeTeacher()
+              .then(teacher => {
+
+                  if (teacher) {
+                    console.log('found', teacher.id);
+                    ctx.args.data.teacherId = teacher.id;
+
+                    // for logging purposes
+                    ctx.args.data.teacherInstance = teacher;
+                    resolve();
+                  } else {
+                    console.warn('An error occured:', err);
+                    reject(new HttpErrors.BadRequest('Could not find a free teacher for this lessonEvent', err));
+                  }
+
+                }, err => {
+                  console.warn('An error occured:', err);
+                  reject(new HttpErrors.BadRequest('Some error occurred while assigning the new teacher for lessonEvent', err));
                 }
+              );
 
-                if (role) {
-                  console.log('Role found,', role.id);
-
-                  // find role-mapping instances for this role
-                  RoleMapping.findOne({
-                    where: {roleId: role.id, principalType: 'USER'},
-                    order: 'id ASC'
-                  }, function(err, mapping) {
-                    if (err) {
-                      next(err);
-                    }
-
-                    if (mapping && mapping.principalId) {
-                      console.log('found,', mapping);
-
-                      Customer.findOne({where: {id: mapping.principalId}}, function(err, customer) {
-
-                        if (customer) {
-                          console.log('At last, we found the customer', customer);
-                          console.log('Setting the teacherId for this lesson event');
-                          ctx.args.data.teacherId = customer.id;
-                        }
-
-                        next();
-                      });
-                    } else {
-                      next();
-                    }
-                  });
-                } else {
-                  next();
-                }
-              });
-            }
           } else {
-            next();
+            resolve();
           }
         } else {
-          next();
+          resolve();
+        }
+
+
+      }, err => {
+        console.warn('An error occured:', err);
+        reject(new HttpErrors.BadRequest('Something went wrong, could not find an existing lesson', err));
+      });
+    });
+  });
+
+  LessonEventModel.afterRemote('replaceById', async function(ctx, instance) {
+    return new Promise((resolve) => {
+      if(ctx.args.data.previousInstance) {
+
+        const previousInstance = ctx.args.data.previousInstance;
+        const teacherInstance = ctx.args.data.teacherInstance;
+
+        if(previousInstance.state !== instance.state) {
+          console.log('State has been changed');
+
+          const initiatorId = userService.getUserIdByToken(ctx.req.accessToken);
+
+          // Loggin the state change for the lesson
+          activityLogService.logLessonEventStateChange(
+            initiatorId,
+            instance.studentId,
+            instance.id,
+            ctx.args.data.previousInstance.state,
+            instance.state
+          ).then(() => {
+
+            console.log('Logged');
+
+            if(previousInstance.teacherId !== instance.teacherId && teacherInstance) {
+              console.log('Teacher changed, logging');
+              activityLogService.logLessonEventTeacherAssignement(
+                initiatorId,
+                instance.studentId,
+                instance.id,
+                teacherInstance,
+
+              ).then(() => {
+                resolve();
+              }, err => {
+                console.warn('An error occurred during the log creation', err);
+                resolve();
+              });
+            } else {
+              console.log('Teacher is not changed');
+              resolve();
+            }
+
+          }, err => {
+            console.warn('An error occurred during the log creation', err);
+            resolve();
+          });
+
+        } else {
+          resolve();
         }
       } else {
-        next();
+        resolve();
       }
     });
   });

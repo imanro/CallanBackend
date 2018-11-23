@@ -6,7 +6,7 @@
 module.exports = function(app) {
 
   var ds = app.dataSources.mysqlDs;
-  var models = ['ScheduleRange'];
+  var models = ['ScheduleRange', 'ActivityLog'];
 
   ds.isActual(models, function(err, isActual){
     if (err) throw err;

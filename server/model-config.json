@@ -65,5 +65,9 @@
   "ScheduleRange": {
     "dataSource": "mysqlDs",
     "public": true
+  },
+  "ActivityLog": {
+    "dataSource": "mysqlDs",
+    "public": true
   }
 }

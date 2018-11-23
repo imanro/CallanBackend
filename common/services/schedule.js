@@ -1,12 +1,9 @@
 'use strict';
 
-var app = require('../../server/server');
-const DateService = require('./date');
-const LessonEventService = require('./lesson-event');
-var ScheduleRangeType = require('../enums/schedule-range.type.enum');
+const ScheduleRangeType = require('../enums/schedule-range.type.enum');
 
 class ScheduleService {
-  static fixLastEndMinute(rows) {
+  fixLastEndMinute(rows) {
     for (let i in rows) {
       if (rows.hasOwnProperty(i)) {
         if (rows[i].endMinutes === 0) {
@@ -16,13 +13,11 @@ class ScheduleService {
     }
   }
 
-  static isHourInRange(hour, range){
+  isHourInRange(hour, range) {
     return range.startMinutes / 60 <= hour && range.endMinutes / 60 > hour;
   }
 
-
-
-  static isHourInRanges(hour, ranges) {
+  isHourInRanges(hour, ranges) {
 
     for (const i in ranges) {
       if (ranges.hasOwnProperty(i)) {
@@ -36,7 +31,7 @@ class ScheduleService {
     return false;
   }
 
-  static createCheckAdHocDate(startDate, dayNumber) {
+  createCheckAdHocDate(startDate, dayNumber) {
     const date = new Date(startDate.getTime());
     date.setDate(date.getDate() + dayNumber);
     date.setHours(0);
@@ -46,20 +41,20 @@ class ScheduleService {
     return date;
   }
 
-  static createHourlyDate(startDate, dayNumber, hour) {
+  createHourlyDate(startDate, dayNumber, hour) {
     const date = new Date(startDate.getTime());
     date.setHours(hour);
     date.setDate(date.getDate() + dayNumber);
     return date;
   }
 
-  static filterRegularRangesForDay(ranges, checkDayOfWeek) {
+  filterRegularRangesForDay(ranges, checkDayOfWeek) {
     return ranges.filter(function(row) {
       return row.dayOfWeek === checkDayOfWeek;
     });
   }
 
-  static filterAdHocRangesForDay(ranges, checkDate) {
+  filterAdHocRangesForDay(ranges, checkDate) {
     return ranges.filter(function(row) {
       return row.date &&
         row.date.getFullYear() === checkDate.getFullYear() &&
@@ -68,7 +63,17 @@ class ScheduleService {
     });
   }
 
-  static createHourlyDates(startDate, endDate, rowsRegular, rowsAdHoc, rowsLessonEvents) {
+  createHourlyDates(startDate, endDate, rowsRegular, rowsAdHoc, rowsLessonEvents) {
+
+    /** @type DateService */
+
+    // container should be required here, to avoid of circular dependency
+    const container = require('../conf/configure-container');
+
+    const dateService = container.resolve('dateService');
+
+    /** @type LessonEventService */
+    const lessonEventService = container.resolve('lessonEventService');
 
     // filter only with dates
     rowsAdHoc = rowsAdHoc.filter(function(row) {
@@ -79,7 +84,7 @@ class ScheduleService {
       rowsLessonEvents = [];
     }
 
-    LessonEventService.assignLessonEventEndTime(rowsLessonEvents);
+    lessonEventService.assignLessonEventEndTime(rowsLessonEvents);
 
     // setting dayOfWeek for adHoc
     this.fixLastEndMinute(rowsRegular);
@@ -106,7 +111,7 @@ class ScheduleService {
     const ranges = [];
 
     // TODO: not to obay just by day numbers (cause it may repeat); probably, range of timestamps (stick to each range)
-    const days = DateService.createDaysRange(startDate, endDate);
+    const days = dateService.createDaysRange(startDate, endDate);
 
     for (let dayNumber = 0; dayNumber < days.length; dayNumber++) {
 
@@ -119,12 +124,12 @@ class ScheduleService {
 
       const inclusiveAdHocForDay = this.filterAdHocRangesForDay(inclusiveAdHocRanges, checkDate);
       const exclusiveAdHocForDay = this.filterAdHocRangesForDay(exclusiveAdHocRanges, checkDate);
-      const lessonEventsForDay = LessonEventService.filterLessonEventsForDay(rowsLessonEvents, checkDate);
+      const lessonEventsForDay = lessonEventService.filterLessonEventsForDay(rowsLessonEvents, checkDate);
 
       for (let hour = 0; hour < 24; hour++) {
         const date = this.createHourlyDate(startDate, dayNumber, hour);
 
-        if (LessonEventService.isHourOfLessonEvents(hour, lessonEventsForDay)) {
+        if (lessonEventService.isHourOfLessonEvents(hour, lessonEventsForDay)) {
           console.log('Found lesson event for an hour', hour);
           // not adding
 

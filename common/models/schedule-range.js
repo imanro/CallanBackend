@@ -5,9 +5,14 @@ var LessonEventStateEnum = require('../enums/lesson-event.state.enum');
 var ScheduleRangeRegularity = require('../enums/schedule-range.regularity.enum');
 var ScheduleService = require('../services/schedule');
 
-module.exports = function(ScheduleRange) {
+const container = require('../conf/configure-container');
 
-  ScheduleRange.availableHours = function(startDate, endDate, customerId, isLookupLessonEvents) {
+module.exports = function(ScheduleRangeModel) {
+
+  ScheduleRangeModel.availableHours = function(startDate, endDate, customerId, isLookupLessonEvents) {
+
+    /** @type ScheduleService */
+    const scheduleService = container.resolve('scheduleService');
 
     // find regular schedule ranges
     const filterRegular = {where: {regularity: ScheduleRangeRegularity.REGULAR}};
@@ -27,8 +32,8 @@ module.exports = function(ScheduleRange) {
     }
 
     const findStack = [
-      ScheduleRange.find(filterRegular),
-      ScheduleRange.find(filterAdHoc)
+      ScheduleRangeModel.find(filterRegular),
+      ScheduleRangeModel.find(filterAdHoc)
     ];
 
     if (isLookupLessonEvents) {
@@ -52,7 +57,7 @@ module.exports = function(ScheduleRange) {
       console.log('found lesson events', rowsLessonEvents);
 
       // find
-      return ScheduleService.createHourlyDates(
+      return scheduleService.createHourlyDates(
         startDate, endDate, rowsRegular, rowsAdHoc, rowsLessonEvents
       );
     }, err => {
@@ -60,7 +65,7 @@ module.exports = function(ScheduleRange) {
     });
   };
 
-  ScheduleRange.remoteMethod('availableHours', {
+  ScheduleRangeModel.remoteMethod('availableHours', {
     accepts: [{arg: 'startDate', type: 'date'},
       {arg: 'endDate', type: 'date'},
       {arg: 'customerId', type: 'number'},

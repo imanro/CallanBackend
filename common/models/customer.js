@@ -2,17 +2,17 @@
 
 var utils = require('loopback-datasource-juggler/lib/utils');
 
-module.exports = function(Customer) {
+module.exports = function(CustomerModel) {
 
-  Customer.on('dataSourceAttached', function() {
+  CustomerModel.on('dataSourceAttached', function() {
 
-    var override = Customer.create;
+    var override = CustomerModel.create;
 
-    Customer.create = function(data, options, cb) {
+    CustomerModel.create = function(data, options, cb) {
 
       // create roles too
       // will work only here
-      var app = Customer.app;
+      var app = CustomerModel.app;
       var RoleMapping = app.models.RoleMapping;
 
       if (typeof options === 'function') {

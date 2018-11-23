@@ -4,11 +4,11 @@ var app = require('../../server/server');
 
 class DateService {
 
-  static getDaysBetween(startDate, endDate) {
+  getDaysBetween(startDate, endDate) {
     return Math.round((endDate - startDate) / (24 * 60 * 60 * 1000));
   }
 
-  static createDaysRange(startDate, endDate) {
+  createDaysRange(startDate, endDate) {
     const daysBetween = this.getDaysBetween(startDate, endDate);
 
     const range = [];
@@ -26,6 +26,7 @@ class DateService {
 
     return range;
   }
+
 }
 
 module.exports = DateService;
