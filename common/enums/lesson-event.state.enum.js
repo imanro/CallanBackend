@@ -10,8 +10,11 @@ class LessonEventStateEnum {
   static get COMPLETED() {
     return 3;
   }
-  static get CANCELED() {
+  static get CONFIRMED() {
     return 4;
+  }
+  static get CANCELED() {
+    return 5;
   }
 }
 

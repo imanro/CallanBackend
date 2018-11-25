@@ -7,7 +7,7 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "start": "node .",
+    "start": "forever -w .",
     "posttest": "npm run lint && nsp check"
   },
   "dependencies": {

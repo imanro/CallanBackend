@@ -2,6 +2,8 @@
 
 var app = require('../../server/server');
 
+var LessonEventState = require('../enums/lesson-event.state.enum');
+
 class LessonEventService {
 
   assignLessonEventEndTime(lessonEvents) {
@@ -139,6 +141,26 @@ class LessonEventService {
         }, err => {
           reject(err);
         });
+    });
+  }
+
+  getNearestStudentLessonEvent(studentId, include) {
+    const currentDate = new Date();
+    currentDate.setHours(currentDate.getHours() - 1);
+
+    if (!include) {
+      include = [];
+    }
+
+    console.log(include);
+
+    const LessonEventModel = app.models.LessonEvent;
+
+    return LessonEventModel.findOne({
+      where: {and: [{studentId: studentId}, {startTime: {'gte': currentDate}},
+          {state: {inq: [LessonEventState.PLANNED, LessonEventState.STARTED]}}]},
+      order: ['startTime ASC'],
+      include: include,
     });
   }
 

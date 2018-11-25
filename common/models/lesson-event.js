@@ -23,7 +23,30 @@ module.exports = function(LessonEventModel) {
       lessonEventService.isEnoughtLessonEventsBalance(courseProgressId).then(value => {
 
         if(value) {
-          resolve();
+
+          console.log('executed this');
+
+          userService.findFreeTeacher()
+            .then(teacher => {
+
+                if (teacher) {
+                  console.log('found', teacher.id);
+                  ctx.args.data.teacherId = teacher.id;
+
+                  // for logging purposes
+                  ctx.args.data.teacherInstance = teacher;
+                  resolve();
+                } else {
+                  console.warn('An error occured:', err);
+                  reject(new HttpErrors.BadRequest('Could not find a free teacher for this lessonEvent', err));
+                }
+
+              }, err => {
+                console.warn('An error occured:', err);
+                reject(new HttpErrors.BadRequest('Some error occurred while assigning the new teacher for lessonEvent', err));
+              }
+            );
+
         } else {
           reject(new HttpErrors.BadRequest('There is not enough lessons on customer\'s balance!'));
         }
@@ -35,9 +58,22 @@ module.exports = function(LessonEventModel) {
     });
   });
 
+  // CHECK, will the two same hooks work or not
+  /*
+  LessonEventModel.beforeRemote('create', async function(ctx) {
+    return new Promise((resolve) => {
+      console.log('Also executed');
+      resolve();
+    });
+
+  });
+  */
+
   LessonEventModel.afterRemote('create', async function(ctx, instance) {
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+
+      const teacherInstance = ctx.args.data.teacherInstance;
 
       lessonEventService.getLessonEventsBalance(instance.courseProgressId)
         .then(previousBalance => {
@@ -54,7 +90,23 @@ module.exports = function(LessonEventModel) {
                 currentBalance
               )
                 .then(() => {
-                  resolve();
+
+                  if(instance.teacherId) {
+                    activityLogService.logLessonEventTeacherAssignement(
+                      initiatorId,
+                      instance.studentId,
+                      instance.id,
+                      teacherInstance,
+                    ).then(() => {
+                      resolve();
+                    }, err => {
+                      console.warn('An error occurred during the log creation', err);
+                      resolve();
+                    });
+                  } else {
+                    resolve();
+                  }
+
                 }, err => {
                   console.warn('An error occurred during the log creation', err);
                   resolve();
@@ -97,6 +149,7 @@ module.exports = function(LessonEventModel) {
           if (!ctx.args.data.teacherId && !exLesson.teacherId) {
             console.log('This lesson didn\'t have the teacher. Try to find free one');
 
+            // NOTE: now we assign teacher during lessonEvent creation! (same code is executed)
             userService.findFreeTeacher()
               .then(teacher => {
 
@@ -187,5 +240,28 @@ module.exports = function(LessonEventModel) {
         resolve();
       }
     });
+  });
+
+  LessonEventModel.nearestStudentLessonEvent = function(studentId, include) {
+    return new Promise((resolve, reject) => {
+      lessonEventService.getNearestStudentLessonEvent(studentId, include)
+        .then(result => {
+          if(result) {
+            resolve(result);
+          } else {
+            reject(new HttpErrors.NotFound('Such lesson event is not found'));
+          }
+        }, err => {
+          reject(err);
+        })
+    });
+
+
+  };
+
+  LessonEventModel.remoteMethod('nearestStudentLessonEvent', {
+    accepts: [{arg: 'studentId', type: 'number', required: true},{arg: 'include', type: 'array'}],
+    http: {verb: 'get'},
+    returns: { arg: 'data', type: 'LessonEvent', root: true},
   });
 };
