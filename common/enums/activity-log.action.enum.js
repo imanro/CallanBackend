@@ -5,6 +5,10 @@ class ActivityLogActionEnum {
     return 'BALANCE_SPEND';
   }
 
+  static get BALANCE_REFUND() {
+    return 'BALANCE_REFUND';
+  }
+
   static get BALANCE_CHANGE() {
     return 'BALANCE_CHANGE';
   }

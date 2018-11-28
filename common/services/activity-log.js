@@ -8,7 +8,7 @@ var ActivityLogActionEnum = require('../enums/activity-log.action.enum');
 class ActivityLogService {
 
   logBalanceSpend(initiatorId, affectedId, lessonEventId, previousValue, currentValue) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const ActivityLogModel = this.getActivityLogModel();
 
       const data = this.createLogData(
@@ -22,9 +22,34 @@ class ActivityLogService {
 
       ActivityLogModel.create(data)
         .then(() => {
-          resolve();
+          resolve(true);
         }, err => {
           console.warn('Could not create log for this operation due to', err);
+          reject();
+        });
+    });
+  }
+
+  logBalanceRefund(initiatorId, affectedId, lessonEventId, previousValue, currentValue) {
+    return new Promise((resolve, reject) => {
+      const ActivityLogModel = this.getActivityLogModel();
+
+      const data = this.createLogData(
+        initiatorId,
+        affectedId,
+        `Balance refund for ${lessonEventId} lessonEvent ` +
+        `from ${previousValue} to ${currentValue}`,
+        ActivityLogRealmEnum.BALANCE,
+        ActivityLogActionEnum.BALANCE_REFUND
+      );
+
+      ActivityLogModel.create(data)
+        .then(() => {
+          console.log('resolved');
+          resolve(true);
+        }, err => {
+          console.warn('Could not create log for this operation due to', err);
+          reject();
         });
     });
   }
@@ -51,15 +76,20 @@ class ActivityLogService {
     });
   }
 
-  logLessonEventStateChange(initiatorId, affectedId, lessonEventId, previousValue, currentValue) {
+  logLessonEventStateChange(initiatorId, affectedId, lessonEventId, previousValue, currentValue, reason) {
     return new Promise((resolve) => {
       const ActivityLogModel = this.getActivityLogModel();
+
+      let messageSuffix = '';
+      if (reason) {
+        messageSuffix += ' due to "' + reason + '"';
+      }
 
       const data = this.createLogData(
         initiatorId,
         affectedId,
         `Status of the lessonEvent ${lessonEventId} has been changed from ` +
-        `from ${previousValue} to ${currentValue}`,
+        `from ${previousValue} to ${currentValue}${messageSuffix}`,
         ActivityLogRealmEnum.LESSON_EVENT,
         ActivityLogActionEnum.LESSON_EVENT_STATUS_CHANGE
       );

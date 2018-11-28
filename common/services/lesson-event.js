@@ -114,6 +114,30 @@ class LessonEventService {
     });
   }
 
+  incrementLessonEventsBalance(progressId) {
+    return new Promise((resolve, reject) => {
+      const CourseProgress = app.models.CourseProgress;
+
+      if (progressId) {
+
+        CourseProgress.findById(progressId)
+          .then(courseProgress => {
+            courseProgress.lessonEventsBalance += 1;
+
+            courseProgress.save(function() {
+              console.log('lessonEventsBalance incremented! Now it is', courseProgress.lessonEventsBalance);
+              resolve(courseProgress.lessonEventsBalance);
+            });
+
+          }, err => {
+            reject(err);
+          });
+      } else {
+        reject('There is no course progress assigned with this lesson event :(');
+      }
+    });
+  }
+
   assignLessonEventTeacher(lessonEvent) {
     // find the previous instance of the model with such id
 
@@ -158,6 +182,26 @@ class LessonEventService {
 
     return LessonEventModel.findOne({
       where: {and: [{studentId: studentId}, {startTime: {'gte': currentDate}},
+          {state: {inq: [LessonEventState.PLANNED, LessonEventState.STARTED]}}]},
+      order: ['startTime ASC'],
+      include: include,
+    });
+  }
+
+  getNearestTeacherLessonEvent(teacherId, include) {
+    const currentDate = new Date();
+    currentDate.setHours(currentDate.getHours() - 1);
+
+    if (!include) {
+      include = [];
+    }
+
+    console.log(include);
+
+    const LessonEventModel = app.models.LessonEvent;
+
+    return LessonEventModel.findOne({
+      where: {and: [{teacherId: teacherId}, {startTime: {'gte': currentDate}},
           {state: {inq: [LessonEventState.PLANNED, LessonEventState.STARTED]}}]},
       order: ['startTime ASC'],
       include: include,
