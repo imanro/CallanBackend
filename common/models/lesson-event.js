@@ -283,6 +283,15 @@ module.exports = function(LessonEventModel) {
     });
   };
 
+  /**
+   * Finds the lesson events with status "started" or "planned", and that time is gone, and assigns the status "completed"
+   *
+   * @returns {Promise<any>}
+   */
+  LessonEventModel.completeLessonEvents = function() {
+    return lessonEventService.completeLessonEvents();
+  };
+
   LessonEventModel.remoteMethod('nearestStudentLessonEvent', {
     accepts: [{arg: 'studentId', type: 'number', required: true},{arg: 'include', type: 'array'}],
     http: {verb: 'get'},
@@ -294,4 +303,10 @@ module.exports = function(LessonEventModel) {
     http: {verb: 'get'},
     returns: { arg: 'data', type: 'LessonEvent', root: true},
   });
+
+  LessonEventModel.remoteMethod('completeLessonEvents', {
+    http: {verb: 'put'},
+    returns: { arg: 'result', type: 'boolean'},
+  });
+
 };

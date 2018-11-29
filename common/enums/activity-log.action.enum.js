@@ -17,6 +17,10 @@ class ActivityLogActionEnum {
     return 'LESSON_EVENT_STATUS_CHANGE';
   }
 
+  static get LESSON_EVENT_AUTO_STATUS_CHANGE() {
+    return 'LESSON_EVENT_AUTO_STATUS_CHANGE';
+  }
+
   static get LESSON_EVENT_TEACHER_ASSIGNEMENT() {
     return 'LESSON_EVENT_TEACHER_ASSIGNEMENT';
   }

@@ -5,6 +5,8 @@ var app = require('../../server/server');
 var ActivityLogRealmEnum = require('../enums/activity-log.realm.enum');
 var ActivityLogActionEnum = require('../enums/activity-log.action.enum');
 
+const rootUserId = 0;
+
 class ActivityLogService {
 
   logBalanceSpend(initiatorId, affectedId, lessonEventId, previousValue, currentValue) {
@@ -14,7 +16,7 @@ class ActivityLogService {
       const data = this.createLogData(
         initiatorId,
         affectedId,
-        `Balance spent for ${lessonEventId} lessonEvent ` +
+        `Balance spent for the lesson event ` +
         `from ${previousValue} to ${currentValue}`,
         ActivityLogRealmEnum.BALANCE,
         ActivityLogActionEnum.BALANCE_SPEND
@@ -37,7 +39,7 @@ class ActivityLogService {
       const data = this.createLogData(
         initiatorId,
         affectedId,
-        `Balance refund for ${lessonEventId} lessonEvent ` +
+        `Balance refund for lesson event cancellation ` +
         `from ${previousValue} to ${currentValue}`,
         ActivityLogRealmEnum.BALANCE,
         ActivityLogActionEnum.BALANCE_REFUND
@@ -61,7 +63,7 @@ class ActivityLogService {
       const data = this.createLogData(
         initiatorId,
         affectedId,
-        `Balance changed for ${courseProgressId} courseProgress ` +
+        `Balance changed ` +
         `from ${previousValue} to ${currentValue}`,
         ActivityLogRealmEnum.BALANCE,
         ActivityLogActionEnum.BALANCE_CHANGE
@@ -88,10 +90,32 @@ class ActivityLogService {
       const data = this.createLogData(
         initiatorId,
         affectedId,
-        `Status of the lessonEvent ${lessonEventId} has been changed from ` +
-        `from ${previousValue} to ${currentValue}${messageSuffix}`,
+        `State of the lesson event has been changed from ` +
+        `from {state: ${previousValue}} to {state: ${currentValue}}${messageSuffix}`,
         ActivityLogRealmEnum.LESSON_EVENT,
         ActivityLogActionEnum.LESSON_EVENT_STATUS_CHANGE
+      );
+
+      ActivityLogModel.create(data)
+        .then(() => {
+          resolve();
+        }, err => {
+          console.warn('Could not create log for this operation due to', err);
+        });
+    });
+  }
+
+  logLessonEventAutoStateChange(affectedId, lessonEventId, previousValue, currentValue) {
+    return new Promise((resolve) => {
+      const ActivityLogModel = this.getActivityLogModel();
+
+      const data = this.createLogData(
+        rootUserId,
+        affectedId,
+        `State of the lesson event has been automatically changed from ` +
+        `from {state: ${previousValue}} to {state: ${currentValue}}`,
+        ActivityLogRealmEnum.LESSON_EVENT,
+        ActivityLogActionEnum.LESSON_EVENT_AUTO_STATUS_CHANGE
       );
 
       ActivityLogModel.create(data)
@@ -110,8 +134,8 @@ class ActivityLogService {
       const data = this.createLogData(
         initiatorId,
         affectedId,
-        `Teacher for the lessonEvent ${lessonEventId} has been assigned to teacher ` +
-        `${teacher.id} (${teacher.email})`,
+        `Teacher for the lesson event has been assigned to teacher ` +
+        `{customer: ${teacher.id}} (${teacher.email})`,
         ActivityLogRealmEnum.LESSON_EVENT,
         ActivityLogActionEnum.LESSON_EVENT_TEACHER_ASSIGNEMENT
       );
@@ -135,7 +159,7 @@ class ActivityLogService {
       initiatorId: initiatorId,
       affectedId: affectedId,
       realm: realm,
-      action: action
+      action: action,
     };
   }
 }

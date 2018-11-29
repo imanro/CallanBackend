@@ -169,6 +169,7 @@ class LessonEventService {
   }
 
   getNearestStudentLessonEvent(studentId, include) {
+    // TODO: obey lesson event length, not only 1 hour. Native queries :(
     const currentDate = new Date();
     currentDate.setHours(currentDate.getHours() - 1);
 
@@ -189,6 +190,7 @@ class LessonEventService {
   }
 
   getNearestTeacherLessonEvent(teacherId, include) {
+    // TODO: obey lesson event length, not only 1 hour. Native queries :(
     const currentDate = new Date();
     currentDate.setHours(currentDate.getHours() - 1);
 
@@ -205,6 +207,73 @@ class LessonEventService {
           {state: {inq: [LessonEventState.PLANNED, LessonEventState.STARTED]}}]},
       order: ['startTime ASC'],
       include: include,
+    });
+  }
+
+  completeLessonEvents() {
+    const LessonEventModel = app.models.LessonEvent;
+    const container = require('../conf/configure-container');
+    /** @type ActivityLogService */
+    const activityLogService = container.resolve('activityLogService');
+
+    const currentDate = new Date();
+    // search
+
+    return LessonEventModel.find({
+      where: {
+        and: [{startTime: {'lte': currentDate}},
+          {state: {inq: [LessonEventState.PLANNED, LessonEventState.STARTED]}}
+        ],
+      },
+    }).then(results => {
+      // for each result, check is'nt current time > than current's
+
+      const calls = [];
+
+      for (const instance of results) {
+        const checkDate = new Date(instance.startTime);
+        checkDate.setMinutes(checkDate.getMinutes() + instance.duration);
+
+        // FIXME
+        // checkDate.setDate(checkDate.getDate() - 3);
+        // console.log('To check', checkDate);
+
+
+        // logging and moving the state to completed
+        if (currentDate > checkDate) {
+
+          // console.log(currentDate, checkDate, 'checking');
+
+          console.log('date is bigger');
+          const previousState = instance.state;
+          instance.state = LessonEventState.COMPLETED;
+          calls.push(new Promise((resolve => {
+            // change state than log
+            return instance.save()
+              .then(() => {
+                return activityLogService.logLessonEventAutoStateChange(instance.studentId, instance.id, previousState, instance.state);
+              })
+              .then(() => {
+                resolve();
+              })
+              .catch(err => {
+                console.error('An error occurred during completeLessonEvents at', instance.id, err);
+              });
+          })));
+        }
+      }
+
+      return Promise.all(calls).then(() => {
+        if (calls.length) {
+          console.log('all needle lessons is completed');
+        } else {
+          console.log('there was no lessons to complete');
+        }
+        return true;
+      });
+
+
+      return true;
     });
   }
 
