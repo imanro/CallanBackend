@@ -20,7 +20,7 @@
     "created": {
       "type":"date",
       "defaultFn": "now"
-    },
+    }
   },
   "validations": [],
   "relations": {
