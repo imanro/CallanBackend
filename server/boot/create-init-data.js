@@ -30,9 +30,9 @@ module.exports = function(app) {
     firstName: 'Tertia',
     lastName: 'Fourie',
     password: '123456'
-  }], function(err, customerInstance) {
+  }], function(err) {
     if (err) throw err;
-    console.log(customerInstance);
+
   });
 
   /*
