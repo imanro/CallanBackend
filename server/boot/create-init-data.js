@@ -20,6 +20,21 @@ module.exports = function(app) {
   });
   */
 
+  app.models.Customer.create([{
+    email: 'manro@callan.com',
+    firstName: 'Manro',
+    lastName: 'Manro',
+    password: 'Hjlmiy'
+  }, {
+    email: 'tertia@callan.com',
+    firstName: 'Tertia',
+    lastName: 'Fourie',
+    password: '123456'
+  }], function(err, customerInstance) {
+    if (err) throw err;
+    console.log(customerInstance);
+  });
+
   /*
   app.models.Role.create([{
     name: 'admin'
