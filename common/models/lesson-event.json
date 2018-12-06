@@ -22,7 +22,11 @@
     },
     "cancelationReason": {
       "type": "string"
-    }
+    },
+    "created": {
+      "type":"date",
+      "defaultFn": "now"
+    },
   },
   "validations": [],
   "relations": {

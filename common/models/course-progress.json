@@ -16,7 +16,11 @@
       "type": "number",
       "default": 0,
       "nullable": false
-    }
+    },
+    "created": {
+      "type":"date",
+      "defaultFn": "now"
+    },
   },
   "validations": [],
   "relations": {
