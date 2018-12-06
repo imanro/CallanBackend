@@ -6,13 +6,13 @@
 module.exports = function(app) {
 
   var ds = app.dataSources.mysqlDs;
-  var models = ['Customer', 'Role', 'AccessToken', 'Course', 'Lesson', 'CourseProgress', 'LessonEvent', 'ScheduleRange', 'ActivityLog'];
+  var models = ['Customer', 'Role', 'ACL', 'RoleMapping', 'AccessToken', 'Course', 'Lesson', 'CourseProgress', 'LessonEvent', 'ScheduleRange', 'ActivityLog'];
 
   ds.isActual(models, function(err, isActual){
     if (err) throw err;
 
     if (!isActual) {
-      console.log('Models is not actual, performing autoupdate');
+      console.log('Models are not actual, performing autoupdate');
       ds.autoupdate(models, function(err){
         if (err) throw err;
       });
