@@ -20,6 +20,7 @@ module.exports = function(app) {
   });
   */
 
+  /*
   app.models.Customer.create([{
     email: 'manro@callan.com',
     firstName: 'Manro',
@@ -34,6 +35,7 @@ module.exports = function(app) {
     if (err) throw err;
 
   });
+  */
 
   /*
   app.models.Role.create([{
