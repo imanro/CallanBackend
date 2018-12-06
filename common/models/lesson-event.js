@@ -76,6 +76,12 @@ module.exports = function(LessonEventModel) {
         currentBalance
       );
     }).then(() => {
+      return activityLogService.logLessonEventCreate(
+        initiatorId,
+        instance.studentId,
+        instance.id
+      );
+    }).then(() => {
       if (instance.teacherInstance) {
         return activityLogService.logLessonEventTeacherAssignement(
           initiatorId,

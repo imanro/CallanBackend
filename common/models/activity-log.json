@@ -24,6 +24,10 @@
     "action": {
       "type": "string",
       "required": true
+    },
+    "itemId": {
+      "type": "number",
+      "required": true
     }
   },
   "validations": [],

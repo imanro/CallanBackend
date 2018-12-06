@@ -29,6 +29,11 @@
     },
     "date": {
       "type": "date"
+    },
+    "timezoneOffset": {
+      "type": "number",
+      "required": true,
+      "default": 0
     }
   },
   "validations": [],

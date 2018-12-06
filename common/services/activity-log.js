@@ -10,154 +10,157 @@ const rootUserId = 0;
 class ActivityLogService {
 
   logBalanceSpend(initiatorId, affectedId, lessonEventId, previousValue, currentValue) {
-    return new Promise((resolve, reject) => {
-      const ActivityLogModel = this.getActivityLogModel();
 
-      const data = this.createLogData(
-        initiatorId,
-        affectedId,
-        `Balance spent for the lesson event ` +
-        `from ${previousValue} to ${currentValue}`,
-        ActivityLogRealmEnum.BALANCE,
-        ActivityLogActionEnum.BALANCE_SPEND
-      );
+    // TODO: add the entityId property
 
-      ActivityLogModel.create(data)
-        .then(() => {
-          resolve(true);
-        }, err => {
-          console.warn('Could not create log for this operation due to', err);
-          reject();
-        });
-    });
+    const ActivityLogModel = this.getActivityLogModel();
+
+    const data = this.createLogData(
+      initiatorId,
+      affectedId,
+      lessonEventId,
+      `Balance spent for the lesson event ` +
+      `from ${previousValue} to ${currentValue}`,
+      ActivityLogRealmEnum.BALANCE,
+      ActivityLogActionEnum.BALANCE_SPEND
+    );
+
+    return ActivityLogModel.create(data)
+      .catch(err => {
+        console.warn('Could not create log for this operation due to', err);
+      });
   }
 
   logBalanceRefund(initiatorId, affectedId, lessonEventId, previousValue, currentValue) {
-    return new Promise((resolve, reject) => {
-      const ActivityLogModel = this.getActivityLogModel();
 
-      const data = this.createLogData(
-        initiatorId,
-        affectedId,
-        `Balance refund for lesson event cancellation ` +
-        `from ${previousValue} to ${currentValue}`,
-        ActivityLogRealmEnum.BALANCE,
-        ActivityLogActionEnum.BALANCE_REFUND
-      );
+    const ActivityLogModel = this.getActivityLogModel();
 
-      ActivityLogModel.create(data)
-        .then(() => {
-          console.log('resolved');
-          resolve(true);
-        }, err => {
-          console.warn('Could not create log for this operation due to', err);
-          reject();
-        });
-    });
+    const data = this.createLogData(
+      initiatorId,
+      affectedId,
+      lessonEventId,
+      `Balance refund for lesson event cancellation ` +
+      `from ${previousValue} to ${currentValue}`,
+      ActivityLogRealmEnum.BALANCE,
+      ActivityLogActionEnum.BALANCE_REFUND
+    );
+
+    return ActivityLogModel.create(data)
+      .catch(err => {
+        console.warn('Could not create log for this operation due to', err);
+      });
   }
 
   logBalanceChange(initiatorId, affectedId, courseProgressId, previousValue, currentValue) {
-    return new Promise((resolve) => {
-      const ActivityLogModel = this.getActivityLogModel();
 
-      const data = this.createLogData(
-        initiatorId,
-        affectedId,
-        `Balance changed ` +
-        `from ${previousValue} to ${currentValue}`,
-        ActivityLogRealmEnum.BALANCE,
-        ActivityLogActionEnum.BALANCE_CHANGE
-      );
+    const ActivityLogModel = this.getActivityLogModel();
 
-      ActivityLogModel.create(data)
-        .then(() => {
-          resolve();
-        }, err => {
-          console.warn('Could not create log for this operation due to', err);
-        });
-    });
+    const data = this.createLogData(
+      initiatorId,
+      affectedId,
+      courseProgressId,
+      `Balance changed ` +
+      `from ${previousValue} to ${currentValue}`,
+      ActivityLogRealmEnum.BALANCE,
+      ActivityLogActionEnum.BALANCE_CHANGE
+    );
+
+    return ActivityLogModel.create(data)
+      .catch(err => {
+        console.warn('Could not create log for this operation due to', err);
+      });
+  }
+
+  logLessonEventCreate(initiatorId, affectedId, lessonEventId) {
+    const ActivityLogModel = this.getActivityLogModel();
+
+    const data = this.createLogData(
+      initiatorId,
+      affectedId,
+      lessonEventId,
+      `The user has planned the lesson event`,
+      ActivityLogRealmEnum.LESSON_EVENT,
+      ActivityLogActionEnum.LESSON_EVENT_CREATE
+    );
+
+    return ActivityLogModel.create(data)
+      .catch(err => {
+        console.warn('Could not create log for this operation due to', err);
+      });
   }
 
   logLessonEventStateChange(initiatorId, affectedId, lessonEventId, previousValue, currentValue, reason) {
-    return new Promise((resolve) => {
-      const ActivityLogModel = this.getActivityLogModel();
+    const ActivityLogModel = this.getActivityLogModel();
 
-      let messageSuffix = '';
-      if (reason) {
-        messageSuffix += ' due to "' + reason + '"';
-      }
+    let messageSuffix = '';
+    if (reason) {
+      messageSuffix += ' due to "' + reason + '"';
+    }
 
-      const data = this.createLogData(
-        initiatorId,
-        affectedId,
-        `State of the lesson event has been changed from ` +
-        `from {state: ${previousValue}} to {state: ${currentValue}}${messageSuffix}`,
-        ActivityLogRealmEnum.LESSON_EVENT,
-        ActivityLogActionEnum.LESSON_EVENT_STATUS_CHANGE
-      );
+    const data = this.createLogData(
+      initiatorId,
+      affectedId,
+      lessonEventId,
+      `State of the lesson event has been changed from ` +
+      `from {state: ${previousValue}} to {state: ${currentValue}}${messageSuffix}`,
+      ActivityLogRealmEnum.LESSON_EVENT,
+      ActivityLogActionEnum.LESSON_EVENT_STATUS_CHANGE
+    );
 
-      ActivityLogModel.create(data)
-        .then(() => {
-          resolve();
-        }, err => {
-          console.warn('Could not create log for this operation due to', err);
-        });
-    });
+    return ActivityLogModel.create(data)
+      .catch(err => {
+        console.warn('Could not create log for this operation due to', err);
+      });
   }
 
   logLessonEventAutoStateChange(affectedId, lessonEventId, previousValue, currentValue) {
-    return new Promise((resolve) => {
-      const ActivityLogModel = this.getActivityLogModel();
+    const ActivityLogModel = this.getActivityLogModel();
 
-      const data = this.createLogData(
-        rootUserId,
-        affectedId,
-        `State of the lesson event has been automatically changed from ` +
-        `from {state: ${previousValue}} to {state: ${currentValue}}`,
-        ActivityLogRealmEnum.LESSON_EVENT,
-        ActivityLogActionEnum.LESSON_EVENT_AUTO_STATUS_CHANGE
-      );
+    const data = this.createLogData(
+      rootUserId,
+      affectedId,
+      lessonEventId,
+      `State of the lesson event has been automatically changed from ` +
+      `from {state: ${previousValue}} to {state: ${currentValue}}`,
+      ActivityLogRealmEnum.LESSON_EVENT,
+      ActivityLogActionEnum.LESSON_EVENT_AUTO_STATUS_CHANGE
+    );
 
-      ActivityLogModel.create(data)
-        .then(() => {
-          resolve();
-        }, err => {
-          console.warn('Could not create log for this operation due to', err);
-        });
-    });
+    return ActivityLogModel.create(data)
+      .catch(err => {
+        console.warn('Could not create log for this operation due to', err);
+      });
   }
 
   logLessonEventTeacherAssignement(initiatorId, affectedId, lessonEventId, teacher) {
-    return new Promise((resolve) => {
-      const ActivityLogModel = this.getActivityLogModel();
+    const ActivityLogModel = this.getActivityLogModel();
 
-      const data = this.createLogData(
-        initiatorId,
-        affectedId,
-        `Teacher for the lesson event has been assigned to teacher ` +
-        `{customer: ${teacher.id}} (${teacher.email})`,
-        ActivityLogRealmEnum.LESSON_EVENT,
-        ActivityLogActionEnum.LESSON_EVENT_TEACHER_ASSIGNEMENT
-      );
+    const data = this.createLogData(
+      initiatorId,
+      affectedId,
+      lessonEventId,
+      `Teacher for the lesson event has been assigned to teacher ` +
+      `{customer: ${teacher.id}} (${teacher.email})`,
+      ActivityLogRealmEnum.LESSON_EVENT,
+      ActivityLogActionEnum.LESSON_EVENT_TEACHER_ASSIGNMENT
+    );
 
-      ActivityLogModel.create(data)
-        .then(() => {
-          resolve();
-        }, err => {
-          console.warn('Could not create log for this operation due to', err);
-        });
-    });
+    return ActivityLogModel.create(data)
+      .catch(err => {
+        console.warn('Could not create log for this operation due to', err);
+      });
   }
 
   getActivityLogModel() {
     return app.models.ActivityLog;
   }
 
-  createLogData(initiatorId, affectedId, message, realm, action) {
+  createLogData(initiatorId, affectedId, itemId, message, realm, action) {
     return {
       message: message,
       initiatorId: initiatorId,
       affectedId: affectedId,
+      itemId: itemId,
       realm: realm,
       action: action,
     };

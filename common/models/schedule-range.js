@@ -2,7 +2,8 @@
 
 var app = require('../../server/server');
 var LessonEventStateEnum = require('../enums/lesson-event.state.enum');
-var ScheduleRangeRegularity = require('../enums/schedule-range.regularity.enum');
+var ScheduleRangeRegularityEnum = require('../enums/schedule-range.regularity.enum');
+var ScheduleRangeTypeEnum = require('../enums/schedule-range.type.enum');
 var ScheduleService = require('../services/schedule');
 
 const container = require('../conf/configure-container');
@@ -11,14 +12,19 @@ module.exports = function(ScheduleRangeModel) {
 
   ScheduleRangeModel.availableHours = function(startDate, endDate, customerId, isLookupLessonEvents) {
 
+    console.log('TZ offset on API server is', new Date().getTimezoneOffset());
+
     /** @type ScheduleService */
     const scheduleService = container.resolve('scheduleService');
 
-    // find regular schedule ranges
-    const filterRegular = {where: {regularity: ScheduleRangeRegularity.REGULAR}};
+    /** @type DateService */
+    const dateService = container.resolve('dateService');
+
+    // _all_ regular ranges and ad_hoc between the dates
+    const filterRegular = {where: {regularity: ScheduleRangeRegularityEnum.REGULAR}};
     const filterAdHoc = {
       where: {
-        regularity: ScheduleRangeRegularity.AD_HOC,
+        regularity: ScheduleRangeRegularityEnum.AD_HOC,
         date: {between: [startDate, endDate]},
       },
     };
@@ -33,7 +39,7 @@ module.exports = function(ScheduleRangeModel) {
 
     const findStack = [
       ScheduleRangeModel.find(filterRegular),
-      ScheduleRangeModel.find(filterAdHoc)
+      ScheduleRangeModel.find(filterAdHoc),
     ];
 
     if (isLookupLessonEvents) {
@@ -53,13 +59,12 @@ module.exports = function(ScheduleRangeModel) {
     ).then(results => {
       const [rowsRegular, rowsAdHoc, rowsLessonEvents] = results;
 
-      console.log('found', rowsAdHoc, 'too');
-      console.log('found lesson events', rowsLessonEvents);
-
       // find
+      // return [];
       return scheduleService.createHourlyDates(
         startDate, endDate, rowsRegular, rowsAdHoc, rowsLessonEvents
       );
+
     }, err => {
       console.error('An error occurred', err);
     });

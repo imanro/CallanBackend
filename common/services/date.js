@@ -8,20 +8,25 @@ class DateService {
     return Math.round((endDate - startDate) / (24 * 60 * 60 * 1000));
   }
 
-  createDaysRange(startDate, endDate) {
+  createDaysRange(startDate, endDate, expandForTimezones = false) {
     const daysBetween = this.getDaysBetween(startDate, endDate);
 
     const range = [];
     let currentDay = startDate.getDay();
 
-    for (let i = 0; i < daysBetween; i++) {
-      range.push(currentDay);
-
-      if (currentDay === 6) {
-        currentDay = 0;
-      } else {
-        currentDay++;
-      }
+    // to deal with timezones
+    let startBound, endBound;
+    if (expandForTimezones) {
+      startBound = -1;
+      endBound = daysBetween + 1;
+    } else {
+      startBound = 0;
+      endBound = daysBetween;
+    }
+    for (let i = startBound; i < endBound; i++) {
+      const date = new Date(startDate.getTime());
+      date.setDate(date.getDate() + i);
+      range.push(date);
     }
 
     return range;

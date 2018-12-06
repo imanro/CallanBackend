@@ -13,6 +13,10 @@ class ActivityLogActionEnum {
     return 'BALANCE_CHANGE';
   }
 
+  static get LESSON_EVENT_CREATE() {
+    return 'LESSON_EVENT_CREATE';
+  }
+
   static get LESSON_EVENT_STATUS_CHANGE() {
     return 'LESSON_EVENT_STATUS_CHANGE';
   }
@@ -21,8 +25,8 @@ class ActivityLogActionEnum {
     return 'LESSON_EVENT_AUTO_STATUS_CHANGE';
   }
 
-  static get LESSON_EVENT_TEACHER_ASSIGNEMENT() {
-    return 'LESSON_EVENT_TEACHER_ASSIGNEMENT';
+  static get LESSON_EVENT_TEACHER_ASSIGNMENT() {
+    return 'LESSON_EVENT_TEACHER_ASSIGNMENT';
   }
 }
 

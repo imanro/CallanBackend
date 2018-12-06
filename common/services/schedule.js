@@ -1,6 +1,7 @@
 'use strict';
 
-const ScheduleRangeType = require('../enums/schedule-range.type.enum');
+const ScheduleRangeTypeEnum = require('../enums/schedule-range.type.enum');
+const ScheduleRangeRegularityEnum = require('../enums/schedule-range.regularity.enum');
 
 class ScheduleService {
   fixLastEndMinute(rows) {
@@ -13,16 +14,16 @@ class ScheduleService {
     }
   }
 
-  isHourInRange(hour, range) {
-    return range.startMinutes / 60 <= hour && range.endMinutes / 60 > hour;
+  isDateInRange(date, range) {
+    return date.getTime() >= range[0].getTime() && date.getTime() < range[1].getTime();
   }
 
-  isHourInRanges(hour, ranges) {
+  isDateInRanges(date, ranges) {
 
     for (const i in ranges) {
       if (ranges.hasOwnProperty(i)) {
         const range = ranges[i];
-        if (this.isHourInRange(hour, range)) {
+        if (this.isDateInRange(date, range)) {
           return true;
         }
       }
@@ -41,11 +42,101 @@ class ScheduleService {
     return date;
   }
 
-  createHourlyDate(startDate, dayNumber, hour) {
-    const date = new Date(startDate.getTime());
+  createHourlyDate(day, hour) {
+    const date = new Date(day.getTime());
     date.setHours(hour);
-    date.setDate(date.getDate() + dayNumber);
     return date;
+  }
+
+  convertScheduleRangeToDates(scheduleRange) {
+
+    // for regular time range - dayOfWeek + deal with it
+    let currentDate;
+
+    if (scheduleRange.regularity === ScheduleRangeRegularityEnum.REGULAR) {
+      currentDate = new Date();
+      currentDate.setUTCHours(0, 0, 0, 0);
+      const offset = currentDate.getDay() - scheduleRange.dayOfWeek;
+
+      currentDate.setDate(currentDate.getDate() - offset);
+
+    } else {
+      currentDate = new Date(scheduleRange.date.getTime());
+      // and only then set the time to zero
+      currentDate.setUTCHours(0, 0, 0, 0);
+
+      console.log('Ad hoc date processing', currentDate);
+    }
+
+    // for adHoc: exactDayOfWeek -> 0:00:00 UTC
+
+    // current date is today 0:0 UTC?
+
+    var startDate = new Date(currentDate.getTime());
+
+    startDate.setUTCHours(scheduleRange.startMinutes / 60, scheduleRange.startMinutes % 60);
+
+    // + TZ offset
+    startDate.setUTCHours(startDate.getUTCHours() + (scheduleRange.timezoneOffset / 60));
+
+    const endDate = new Date(currentDate.getTime());
+
+    endDate.setUTCHours(scheduleRange.endMinutes / 60, scheduleRange.endMinutes % 60);
+
+    // + TZ offset
+    endDate.setUTCHours(endDate.getUTCHours() + (scheduleRange.timezoneOffset / 60));
+
+    return [startDate, endDate];
+  }
+
+  convertScheduleRangesToDates(scheduleRanges) {
+
+    const ranges = [];
+    for (const range of scheduleRanges) {
+      const dateRange = this.convertScheduleRangeToDates(range);
+      ranges.push(dateRange);
+    }
+
+    return ranges;
+  }
+
+  adoptRegularRangesDates(rangesDates, days) {
+
+    // (for each date in given range, check getDay()
+
+    // search for regular range with the same day
+
+    // if found
+
+    // create a new range, set day to this date, 0:0:0
+
+    // get the distance between two dates of ranges in getTime() as value X
+
+    // search for the same getDay in given regular ranges (search by 1st element)
+
+    // set hours from there, and for the 2nd - copy 1st + value X
+
+    const adopted = [];
+
+    for (const day of days) {
+
+      for (const rangeDate of rangesDates) {
+        const [startRangeDate, endRangeDate] = rangeDate;
+
+        if (day.getDay() === startRangeDate.getDay()) {
+          const timeDiff = endRangeDate.getTime() - startRangeDate.getTime();
+
+          const startDate = new Date(day.getTime());
+          startDate.setHours(startRangeDate.getHours(), startRangeDate.getMinutes(), 0, 0);
+
+          const endDate = new Date(startDate.getTime() + timeDiff);
+
+          adopted.push([startDate, endDate]);
+        }
+      }
+    }
+
+    return adopted;
   }
 
   filterRegularRangesForDay(ranges, checkDayOfWeek) {
@@ -65,11 +156,10 @@ class ScheduleService {
 
   createHourlyDates(startDate, endDate, rowsRegular, rowsAdHoc, rowsLessonEvents) {
 
-    /** @type DateService */
-
     // container should be required here, to avoid of circular dependency
     const container = require('../conf/configure-container');
 
+    /** @type DateService */
     const dateService = container.resolve('dateService');
 
     /** @type LessonEventService */
@@ -80,54 +170,59 @@ class ScheduleService {
       return row.date;
     });
 
+    // setting dayOfWeek for adHoc
+    this.fixLastEndMinute(rowsRegular);
+    this.fixLastEndMinute(rowsAdHoc);
+
+    const rowsRegularInclusive = rowsRegular.filter((row) => {
+      return row.type === ScheduleRangeTypeEnum.INCLUSIVE;
+    });
+
+    const rowsRegularExclusive = rowsRegular.filter((row) => {
+      return row.type === ScheduleRangeTypeEnum.EXCLUSIVE;
+    });
+
+    const rowsAdHocInclusive = rowsAdHoc.filter((row) => {
+      return row.type === ScheduleRangeTypeEnum.INCLUSIVE;
+    });
+
+    const rowsAdHocExclusive = rowsAdHoc.filter((row) => {
+      return row.type === ScheduleRangeTypeEnum.EXCLUSIVE;
+    });
+
     if (!rowsLessonEvents) {
       rowsLessonEvents = [];
     }
 
     lessonEventService.assignLessonEventEndTime(rowsLessonEvents);
 
-    // setting dayOfWeek for adHoc
-    this.fixLastEndMinute(rowsRegular);
-    this.fixLastEndMinute(rowsAdHoc);
+    // + processing of inclusive
+    const regularInclusiveRangesDates = this.convertScheduleRangesToDates(rowsRegularInclusive);
+    const regularExclusiveRangesDates = this.convertScheduleRangesToDates(rowsRegularExclusive);
 
-    // FIXME: in favour of startDate, endDate
+    const adHocInclusiveRangesDates = this.convertScheduleRangesToDates(rowsAdHocInclusive);
+    const adHocExclusiveRangesDates = this.convertScheduleRangesToDates(rowsAdHocExclusive);
 
-    const inclusiveRegularRanges = rowsRegular.filter(function(row) {
-      return row.type === ScheduleRangeType.INCLUSIVE;
-    });
+    console.log('Converted:', regularInclusiveRangesDates);
+    console.log(' ah:', rowsAdHocExclusive, adHocExclusiveRangesDates);
 
-    const exclusiveRegularRanges = rowsRegular.filter(function(row) {
-      return row.type === ScheduleRangeType.EXCLUSIVE;
-    });
+    // create range from startDate and endDate
+    const days = dateService.createDaysRange(startDate, endDate, true);
 
-    const inclusiveAdHocRanges = rowsAdHoc.filter(function(row) {
-      return row.type === ScheduleRangeType.INCLUSIVE;
-    });
-
-    const exclusiveAdHocRanges = rowsAdHoc.filter(function(row) {
-      return row.type === ScheduleRangeType.EXCLUSIVE;
-    });
+    const adoptedRegularInclusiveRangesDates = this.adoptRegularRangesDates(regularInclusiveRangesDates, days);
+    const adoptedRegularExclusiveRangesDates = this.adoptRegularRangesDates(regularExclusiveRangesDates, days);
 
     const ranges = [];
 
-    // TODO: not to obay just by day numbers (cause it may repeat); probably, range of timestamps (stick to each range)
-    const days = dateService.createDaysRange(startDate, endDate);
+    for (const day of days) {
 
-    for (let dayNumber = 0; dayNumber < days.length; dayNumber++) {
-
-      const checkDayOfWeek = days[dayNumber];
-      const checkDate = this.createCheckAdHocDate(startDate, dayNumber);
-
-      console.log('checking day', checkDayOfWeek);
-      const inclusiveRegularForDay = this.filterRegularRangesForDay(inclusiveRegularRanges, checkDayOfWeek);
-      const exclusiveRegularForDay = this.filterRegularRangesForDay(exclusiveRegularRanges, checkDayOfWeek);
-
-      const inclusiveAdHocForDay = this.filterAdHocRangesForDay(inclusiveAdHocRanges, checkDate);
-      const exclusiveAdHocForDay = this.filterAdHocRangesForDay(exclusiveAdHocRanges, checkDate);
-      const lessonEventsForDay = lessonEventService.filterLessonEventsForDay(rowsLessonEvents, checkDate);
+      console.log('checking day', day);
+      const lessonEventsForDay = lessonEventService.filterLessonEventsForDay(rowsLessonEvents, day);
 
       for (let hour = 0; hour < 24; hour++) {
-        const date = this.createHourlyDate(startDate, dayNumber, hour);
+
+        const checkDate = this.createHourlyDate(day, hour);
+        // console.log('Check date is:', checkDate);
 
         if (lessonEventService.isHourOfLessonEvents(hour, lessonEventsForDay)) {
           console.log('Found lesson event for an hour', hour);
@@ -135,27 +230,29 @@ class ScheduleService {
 
         } else {
 
-          if (this.isHourInRanges(hour, inclusiveRegularForDay)) {
-            if (this.isHourInRanges(hour, exclusiveRegularForDay)) {
-              if (this.isHourInRanges(hour, inclusiveAdHocForDay)) {
-                ranges.push(date);
+          if (this.isDateInRanges(checkDate, adoptedRegularInclusiveRangesDates)) {
+            console.log('is');
+            if (this.isDateInRanges(checkDate, adoptedRegularExclusiveRangesDates)) {
+              if (this.isDateInRanges(checkDate, adHocInclusiveRangesDates)) {
+                ranges.push(checkDate);
+
               } else {
                 // not adding
                 ;
               }
             } else {
 
-              if (this.isHourInRanges(hour, exclusiveAdHocForDay)) {
+              if (this.isDateInRanges(checkDate, adHocExclusiveRangesDates)) {
                 // not adding
 
               } else {
-                ranges.push(date);
+                ranges.push(checkDate);
               }
             }
 
           } else {
-            if (this.isHourInRanges(hour, inclusiveAdHocForDay)) {
-              ranges.push(date);
+            if (this.isDateInRanges(checkDate, adHocInclusiveRangesDates)) {
+              ranges.push(checkDate);
             } else {
               // not adding
               ;
