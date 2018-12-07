@@ -80,6 +80,12 @@
     },
     {
       "principalType": "ROLE",
+      "principalId": "admin",
+      "permission": "ALLOW",
+      "property": "patchAttributes"
+    },
+    {
+      "principalType": "ROLE",
       "principalId": "$everyone",
       "permission": "DENY",
       "property": "create"

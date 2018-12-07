@@ -21,7 +21,8 @@ module.exports = function(CustomerModel) {
       });
   });
 
-  CustomerModel.afterRemote('replaceById', async function(ctx, instance) {
+  // to quick detect name of remote-method, see strong-remoting/lib/remote-objects.js:405 (RemoteObjects.prototype.execHooks) (console.log(type))
+  CustomerModel.afterRemote('prototype.patchAttributes', async function(ctx, instance) {
     return customerService.assignCustomerRoles(instance.id, ctx.req.body.roles)
       .then(() => {
         const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
@@ -31,5 +32,4 @@ module.exports = function(CustomerModel) {
         console.error(err, 'occurred');
       });
   });
-
 };
