@@ -5,10 +5,10 @@ const HttpErrors = require('http-errors');
 var LessonEventState = require('../enums/lesson-event.state.enum');
 const container = require('../conf/configure-container');
 
-/** @type LessonEventService */
-const lessonEventService = container.resolve('lessonEventService');
-/** @type UserService */
-const userService = container.resolve('userService');
+/** @type LessonService */
+const lessonService = container.resolve('lessonService');
+/** @type CustomerService */
+const customerService = container.resolve('customerService');
 
 /** @type ActivityLogService */
 const activityLogService = container.resolve('activityLogService');
@@ -22,10 +22,10 @@ module.exports = function(LessonEventModel) {
 
     const courseProgressId = ctx.args.data.courseProgressId;
 
-    return lessonEventService.isEnoughtLessonEventsBalance(courseProgressId)
+    return lessonService.isEnoughtLessonEventsBalance(courseProgressId)
       .then(value => {
         if (value) {
-          return userService.findFreeTeacher();
+          return customerService.findFreeTeacher();
         } else {
           throw new HttpErrors.BadRequest('There is not enough lessons on customer\'s balance!');
         }
@@ -59,12 +59,12 @@ module.exports = function(LessonEventModel) {
    */
   LessonEventModel.afterRemote('create', async function(ctx, instance) {
 
-    const initiatorId = userService.getUserIdByToken(ctx.req.accessToken);
+    const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
 
     return Promise.all(
       [
-        lessonEventService.getLessonEventsBalance(instance.courseProgressId),
-        lessonEventService.decrementLessonEventsBalance(instance.courseProgressId)
+        lessonService.getLessonEventsBalance(instance.courseProgressId),
+        lessonService.decrementLessonEventsBalance(instance.courseProgressId)
       ]).then(results => {
 
       const [previousBalance, currentBalance] = results;
@@ -122,7 +122,7 @@ module.exports = function(LessonEventModel) {
             if (newState === LessonEventState.STARTED && exLesson.state === LessonEventState.PLANNED) {
               console.log('User trying to start event lesson; Checking, if this lesson has the teacher');
               if (!ctx.args.data.teacherId && !exLesson.teacherId) {
-                return userService.findFreeTeacher()
+                return customerService.findFreeTeacher()
               } else {
                 console.log('Lesson already has a teacher');
                 return true;
@@ -171,7 +171,7 @@ module.exports = function(LessonEventModel) {
     const previousInstance = ctx.args.data.previousInstance;
     // may be not presented
     const teacherInstance = ctx.args.data.teacherInstance;
-    const initiatorId = userService.getUserIdByToken(ctx.req.accessToken);
+    const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
 
     return new Promise((resolve) => {
 
@@ -184,8 +184,8 @@ module.exports = function(LessonEventModel) {
 
           resolve(
             Promise.all([
-              lessonEventService.getLessonEventsBalance(instance.courseProgressId),
-              lessonEventService.incrementLessonEventsBalance(instance.courseProgressId)
+              lessonService.getLessonEventsBalance(instance.courseProgressId),
+              lessonService.incrementLessonEventsBalance(instance.courseProgressId)
             ]).then(results => {
 
               const [previousBalance, currentBalance] = results;
@@ -254,7 +254,7 @@ module.exports = function(LessonEventModel) {
    */
   LessonEventModel.nearestStudentLessonEvent = function(studentId, include) {
     return new Promise((resolve, reject) => {
-      lessonEventService.getNearestStudentLessonEvent(studentId, include)
+      lessonService.getNearestStudentLessonEvent(studentId, include)
         .then(result => {
           if(result) {
             resolve(result);
@@ -276,7 +276,7 @@ module.exports = function(LessonEventModel) {
    */
   LessonEventModel.nearestTeacherLessonEvent = function(teacherId, include) {
     return new Promise((resolve, reject) => {
-      lessonEventService.getNearestTeacherLessonEvent(teacherId, include)
+      lessonService.getNearestTeacherLessonEvent(teacherId, include)
         .then(result => {
           if(result) {
             resolve(result);
@@ -295,7 +295,7 @@ module.exports = function(LessonEventModel) {
    * @returns {Promise<any>}
    */
   LessonEventModel.completeLessonEvents = function() {
-    return lessonEventService.completeLessonEvents();
+    return lessonService.completeLessonEvents();
   };
 
   LessonEventModel.remoteMethod('nearestStudentLessonEvent', {

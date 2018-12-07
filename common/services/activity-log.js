@@ -151,6 +151,42 @@ class ActivityLogService {
       });
   }
 
+  logCustomerCreate(initiatorId, affectedId) {
+    const ActivityLogModel = this.getActivityLogModel();
+
+    const data = this.createLogData(
+      initiatorId,
+      affectedId,
+      affectedId,
+      `Customer created`,
+      ActivityLogRealmEnum.CUSTOMER,
+      ActivityLogActionEnum.CUSTOMER_CREATE
+    );
+
+    return ActivityLogModel.create(data)
+      .catch(err => {
+        console.warn('Could not create log for this operation due to', err);
+      });
+  }
+
+  logCustomerUpdate(initiatorId, affectedId) {
+    const ActivityLogModel = this.getActivityLogModel();
+
+    const data = this.createLogData(
+      initiatorId,
+      affectedId,
+      affectedId,
+      `Customer data updated`,
+      ActivityLogRealmEnum.CUSTOMER,
+      ActivityLogActionEnum.CUSTOMER_UPDATE
+    );
+
+    return ActivityLogModel.create(data)
+      .catch(err => {
+        console.warn('Could not create log for this operation due to', err);
+      });
+  }
+
   getActivityLogModel() {
     return app.models.ActivityLog;
   }

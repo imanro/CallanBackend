@@ -4,7 +4,7 @@ var app = require('../../server/server');
 
 var LessonEventState = require('../enums/lesson-event.state.enum');
 
-class LessonEventService {
+class LessonService {
 
   assignLessonEventEndTime(lessonEvents) {
     for (let i = 0; i < lessonEvents.length; i++) {
@@ -148,10 +148,10 @@ class LessonEventService {
       }
       const container = require('../conf/configure-container');
 
-      /** @type UserService */
-      const userService = container.resolve('userService');
+      /** @type CustomerService */
+      const customerService = container.resolve('customerService');
 
-      userService.findFreeTeacher()
+      customerService.findFreeTeacher()
         .then(teacher => {
 
           if (teacher) {
@@ -279,4 +279,4 @@ class LessonEventService {
 
 }
 
-module.exports = LessonEventService;
+module.exports = LessonService;

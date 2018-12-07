@@ -28,6 +28,14 @@ class ActivityLogActionEnum {
   static get LESSON_EVENT_TEACHER_ASSIGNMENT() {
     return 'LESSON_EVENT_TEACHER_ASSIGNMENT';
   }
+
+  static get CUSTOMER_CREATE() {
+    return 'CUSTOMER_CREATE';
+  }
+
+  static get CUSTOMER_UPDATE() {
+    return 'CUSTOMER_UPDATE';
+  }
 }
 
 module.exports = ActivityLogActionEnum;

@@ -12,6 +12,10 @@ class ActivityLogRealmEnum {
   static get LESSON_EVENT() {
     return 3;
   }
+
+  static get CUSTOMER() {
+    return 4;
+  }
 }
 
 module.exports = ActivityLogRealmEnum;

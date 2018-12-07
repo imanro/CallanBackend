@@ -3,8 +3,8 @@
 const container = require('../conf/configure-container');
 /** @type ActivityLogService */
 const activityLogService = container.resolve('activityLogService');
-/** @type UserService */
-const userService = container.resolve('userService');
+/** @type CustomerService */
+const customerService = container.resolve('customerService');
 
 module.exports = function(CourseProgressModel) {
 
@@ -31,7 +31,7 @@ module.exports = function(CourseProgressModel) {
   CourseProgressModel.afterRemote('replaceById', async function(ctx, instance) {
     return new Promise((resolve, reject) => {
       if (ctx.args.data.previousInstance) {
-        const initiatorId = userService.getUserIdByToken(ctx.req.accessToken);
+        const initiatorId = customerService.getUserIdByToken(ctx.req.accessToken);
 
         activityLogService.logBalanceChange(
           initiatorId,
