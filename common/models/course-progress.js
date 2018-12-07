@@ -31,7 +31,7 @@ module.exports = function(CourseProgressModel) {
   CourseProgressModel.afterRemote('replaceById', async function(ctx, instance) {
     return new Promise((resolve, reject) => {
       if (ctx.args.data.previousInstance) {
-        const initiatorId = customerService.getUserIdByToken(ctx.req.accessToken);
+        const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
 
         activityLogService.logBalanceChange(
           initiatorId,
