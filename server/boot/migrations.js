@@ -6,7 +6,7 @@
 module.exports = function(app) {
 
   var ds = app.dataSources.mysqlDs;
-  var models = ['Customer', 'Role', 'ACL', 'RoleMapping', 'AccessToken', 'Course', 'Lesson', 'CourseProgress', 'LessonEvent', 'ScheduleRange', 'ActivityLog'];
+  var models = ['Customer', 'Role', 'ACL', 'RoleMapping', 'AccessToken', 'Course', 'Lesson', 'CourseProgress', 'LessonEvent', 'ScheduleRange', 'ActivityLog', 'CourseCompetence'];
 
   ds.isActual(models, function(err, isActual){
     if (err) throw err;

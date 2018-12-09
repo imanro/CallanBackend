@@ -69,5 +69,9 @@
   "ActivityLog": {
     "dataSource": "mysqlDs",
     "public": true
+  },
+  "CourseCompetence": {
+    "dataSource": "mysqlDs",
+    "public": true
   }
 }

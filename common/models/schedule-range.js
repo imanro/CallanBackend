@@ -1,78 +1,72 @@
 'use strict';
 
+const HttpErrors = require('http-errors');
+
 var app = require('../../server/server');
 var LessonEventStateEnum = require('../enums/lesson-event.state.enum');
 var ScheduleRangeRegularityEnum = require('../enums/schedule-range.regularity.enum');
 var ScheduleRangeTypeEnum = require('../enums/schedule-range.type.enum');
-var ScheduleService = require('../services/schedule');
 
 const container = require('../conf/configure-container');
 
 module.exports = function(ScheduleRangeModel) {
 
-  ScheduleRangeModel.availableHours = function(startDate, endDate, customerId, isLookupLessonEvents) {
+  ScheduleRangeModel.availableHours = function(startDate, endDate, courseProgressId, customerId, isLookupLessonEvents) {
 
     console.log('TZ offset on API server is', new Date().getTimezoneOffset());
 
     /** @type ScheduleService */
     const scheduleService = container.resolve('scheduleService');
 
-    /** @type DateService */
-    const dateService = container.resolve('dateService');
+    /** @type LessonService */
+    const lessonService = container.resolve('lessonService');
 
-    // _all_ regular ranges and ad_hoc between the dates
-    const filterRegular = {where: {regularity: ScheduleRangeRegularityEnum.REGULAR}};
-    const filterAdHoc = {
-      where: {
-        regularity: ScheduleRangeRegularityEnum.AD_HOC,
-        date: {between: [startDate, endDate]},
-      },
-    };
-
-    console.log('looking between', filterAdHoc['where']['date']['between']);
+    let customerFind;
 
     if (customerId) {
-      console.log('customer received');
-      filterRegular['where']['customerId'] = customerId;
-      filterAdHoc['where']['customerId'] = customerId;
+
+      console.log('Customer given', customerId);
+
+      const customerModel = app.models.Customer;
+      customerFind = customerModel.find({where: {id: customerId}});
+    } else {
+      customerFind = lessonService.findTeachersByCourseProgress(courseProgressId);
     }
 
-    const findStack = [
-      ScheduleRangeModel.find(filterRegular),
-      ScheduleRangeModel.find(filterAdHoc),
-    ];
+    return customerFind
+      .then(customers => {
+        const customerIds = [];
 
-    if (isLookupLessonEvents) {
-      const LessonEvent = app.models.LessonEvent;
-      const filterLessonEvents = {
-        where: {
-          startTime: {between: [startDate, endDate]},
-          state: {neq: LessonEventStateEnum.CANCELED},
+        for (const customer of customers) {
+          customerIds.push(customer.id);
         }
-      };
 
-      findStack.push(LessonEvent.find(filterLessonEvents));
-    }
+        return scheduleService.findScheduleRangesByTeachers(customerIds, startDate, endDate, isLookupLessonEvents);
+      }).then(results => {
+        const [rowsRegular, rowsAdHoc, rowsLessonEvents] = results;
 
-    return Promise.all(
-      findStack
-    ).then(results => {
-      const [rowsRegular, rowsAdHoc, rowsLessonEvents] = results;
+        // find
+        // return [];
+        return scheduleService.createHourlyDates(
+          startDate, endDate, rowsRegular, rowsAdHoc, rowsLessonEvents
+        );
+      }).catch(err => {
+        // Break execution
+        if (err.constructor.name === 'ClientError' || err.constructor.name === 'ServerError') {
+          throw err;
+        } else if (err.constructor.name === 'Error') {
+          throw new HttpErrors.InternalServerError(err.message, err);
+        } else {
+          throw new HttpErrors.InternalServerError(err);
+        }
+      });
 
-      // find
-      // return [];
-      return scheduleService.createHourlyDates(
-        startDate, endDate, rowsRegular, rowsAdHoc, rowsLessonEvents
-      );
-
-    }, err => {
-      console.error('An error occurred', err);
-    });
   };
 
   ScheduleRangeModel.remoteMethod('availableHours', {
     accepts: [{arg: 'startDate', type: 'date'},
       {arg: 'endDate', type: 'date'},
+      {arg: 'courseProgressId', type: 'number'},
       {arg: 'customerId', type: 'number'},
       {arg: 'isLookupLessonEvents', type: 'boolean'}
     ],

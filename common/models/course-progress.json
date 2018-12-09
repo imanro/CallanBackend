@@ -18,7 +18,7 @@
       "nullable": false
     },
     "created": {
-      "type":"date",
+      "type": "date",
       "defaultFn": "now"
     }
   },
@@ -28,6 +28,11 @@
       "type": "belongsTo",
       "model": "Customer",
       "foreignKey": "customerId"
+    },
+    "PrimaryTeacher": {
+      "type": "belongsTo",
+      "model": "Customer",
+      "foreignKey": "primaryTeacherId"
     },
     "Course": {
       "type": "belongsTo",

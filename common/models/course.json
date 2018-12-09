@@ -10,6 +10,11 @@
     "title": {
       "type": "string",
       "required": true
+    },
+    "teacherChoice": {
+      "type": "number",
+      "required": true,
+      "default": 1
     }
   },
   "validations": [],

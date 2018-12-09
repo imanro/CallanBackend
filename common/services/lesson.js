@@ -1,8 +1,10 @@
 'use strict';
 
-var app = require('../../server/server');
+const app = require('../../server/server');
 
-var LessonEventState = require('../enums/lesson-event.state.enum');
+const LessonEventState = require('../enums/lesson-event.state.enum');
+
+const CourseTeacherChoiceEnum = require('../enums/course.teacher-choice.enum');
 
 class LessonService {
 
@@ -235,7 +237,7 @@ class LessonService {
         checkDate.setMinutes(checkDate.getMinutes() + instance.duration);
 
         // FIXME
-        // checkDate.setDate(checkDate.getDate() - 3);
+аааа        // checkDate.setDate(checkDate.getDate() - 3);
         // console.log('To check', checkDate);
 
 
@@ -275,6 +277,41 @@ class LessonService {
 
       return true;
     });
+  }
+
+  findTeachersByCourseProgress(courseProgressId) {
+
+    // first, get information about course
+
+    const courseCompetenceModel = app.models.CourseCompetence;
+    const courseProgressModel = app.models.CourseProgress;
+    const customerModel = app.models.Customer;
+
+    return courseProgressModel.findById(courseProgressId, {include: ['Course']})
+      .then(result => {
+        const courseProgress = result.toJSON();
+
+        console.log(courseProgress.Course.teacherChoice === CourseTeacherChoiceEnum.MANUAL, CourseTeacherChoiceEnum.MANUAL, courseProgress.Course.teacherChoice, parseInt(courseProgress.Course.teacherChoice));
+
+        if (courseProgress.Course.teacherChoice === CourseTeacherChoiceEnum.MANUAL) {
+          console.log('Only one teacher');
+          return customerModel.find({where: {id: courseProgress.primaryTeacherId}});
+        } else {
+          console.log('List of teachers');
+
+          return courseCompetenceModel.find({where: {courseId: courseProgress.Course.id}, include: ['Customer']})
+            .then(results => {
+              const teachers = [];
+              for (const result of results) {
+                const competence = result.toJSON();
+                console.log('CCC', competence.Customer);
+                teachers.push(competence.Customer);
+              }
+
+              return teachers;
+            });
+        }
+      });
   }
 
 }

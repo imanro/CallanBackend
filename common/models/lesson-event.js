@@ -1,8 +1,9 @@
 'use strict';
 
 const HttpErrors = require('http-errors');
-
-var LessonEventState = require('../enums/lesson-event.state.enum');
+var app = require('../../server/server');
+var LessonEventStateEnum = require('../enums/lesson-event.state.enum');
+const CourseTeacherChoiceEnum = require('../enums/course.teacher-choice.enum');
 const container = require('../conf/configure-container');
 
 /** @type LessonService */
@@ -25,21 +26,29 @@ module.exports = function(LessonEventModel) {
     return lessonService.isEnoughtLessonEventsBalance(courseProgressId)
       .then(value => {
         if (value) {
-          return customerService.findFreeTeacher();
+
+          const courseProgressModel = app.models.CourseProgress;
+
+          return courseProgressModel.findById(courseProgressId, {include: ['Course', 'PrimaryTeacher']})
+            .then(result => {
+              // we need to convert to JSON when include something
+              return result.toJSON();
+            });
         } else {
           throw new HttpErrors.BadRequest('There is not enough lessons on customer\'s balance!');
         }
       })
-      .then(teacher => {
-        if (teacher) {
-          console.log('found', teacher.id);
-          ctx.args.data.teacherId = teacher.id;
+      .then(courseProgress => {
+
+        if (courseProgress.Course.teacherChoice === CourseTeacherChoiceEnum.MANUAL) {
+          // assigning teacher right away
+
+          ctx.args.data.teacherId = courseProgress.PrimaryTeacher.id;
           // for logging purposes
-          ctx.args.data.teacherInstance = teacher;
-          return true;
-        } else {
-          throw new HttpErrors.BadRequest('Could not find a free teacher for this lessonEvent');
+          ctx.args.data.teacherInstance = courseProgress.PrimaryTeacher.id;
         }
+
+        return true;
       })
       .catch(err => {
 
@@ -102,9 +111,13 @@ module.exports = function(LessonEventModel) {
   /**
    * The hook before updating of lesson
    */
-  LessonEventModel.beforeRemote('replaceById', async function(ctx) {
+  LessonEventModel.beforeRemote('prototype.patchAttributes', async function(ctx, instance) {
 
-    return LessonEventModel.findById(ctx.args.id)
+
+    // !!! in prototype.patchAttributes, there is no ctx.args.id, there is ctx.ctorArgs.id!!!
+    const id = ctx.ctorArgs.id;
+
+    return LessonEventModel.findById(id)
       .then(exLesson => {
 
           if (exLesson) {
@@ -119,7 +132,7 @@ module.exports = function(LessonEventModel) {
             return true;
           } else {
             const newState = parseInt(ctx.args.data.state);
-            if (newState === LessonEventState.STARTED && exLesson.state === LessonEventState.PLANNED) {
+            if (newState === LessonEventStateEnum.STARTED && exLesson.state === LessonEventStateEnum.PLANNED) {
               console.log('User trying to start event lesson; Checking, if this lesson has the teacher');
               if (!ctx.args.data.teacherId && !exLesson.teacherId) {
                 return customerService.findFreeTeacher()
@@ -163,9 +176,11 @@ module.exports = function(LessonEventModel) {
   /**
    * Hook after update of lesson
    */
-  LessonEventModel.afterRemote('replaceById', async function(ctx, instance) {
+  LessonEventModel.afterRemote('prototype.patchAttributes', async function(ctx, instance) {
 
     // TODO: probably, split on two hooks, one for (refund) and state change logging, 2nd for teacher change logging
+
+    console.log('PI?', ctx.args.data);
 
     // should be presented always
     const previousInstance = ctx.args.data.previousInstance;
@@ -180,7 +195,7 @@ module.exports = function(LessonEventModel) {
       if (previousInstance.state !== instance.state) {
         console.log('State has been changed');
 
-        if (instance.state === LessonEventState.CANCELED) {
+        if (instance.state === LessonEventStateEnum.CANCELED) {
 
           resolve(
             Promise.all([

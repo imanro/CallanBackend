@@ -1,0 +1,25 @@
+{
+  "name": "CourseCompetence",
+  "plural": "CourseCompetences",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {},
+  "validations": [],
+  "relations": {
+    "Customer": {
+      "type": "belongsTo",
+      "model": "Customer",
+      "foreignKey": "customerId"
+    },
+    "Course": {
+      "type": "belongsTo",
+      "model": "Course",
+      "foreignKey": "courseId"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

@@ -1,7 +1,10 @@
 'use strict';
 
+var app = require('../../server/server');
+
 const ScheduleRangeTypeEnum = require('../enums/schedule-range.type.enum');
 const ScheduleRangeRegularityEnum = require('../enums/schedule-range.regularity.enum');
+const LessonEventStateEnum = require('../enums/lesson-event.state.enum');
 
 class ScheduleService {
   fixLastEndMinute(rows) {
@@ -162,8 +165,8 @@ class ScheduleService {
     /** @type DateService */
     const dateService = container.resolve('dateService');
 
-    /** @type LessonEventService */
-    const lessonEventService = container.resolve('lessonEventService');
+    /** @type LessonService */
+    const lessonService = container.resolve('lessonService');
 
     // filter only with dates
     rowsAdHoc = rowsAdHoc.filter(function(row) {
@@ -194,7 +197,7 @@ class ScheduleService {
       rowsLessonEvents = [];
     }
 
-    lessonEventService.assignLessonEventEndTime(rowsLessonEvents);
+    lessonService.assignLessonEventEndTime(rowsLessonEvents);
 
     // + processing of inclusive
     const regularInclusiveRangesDates = this.convertScheduleRangesToDates(rowsRegularInclusive);
@@ -217,14 +220,14 @@ class ScheduleService {
     for (const day of days) {
 
       console.log('checking day', day);
-      const lessonEventsForDay = lessonEventService.filterLessonEventsForDay(rowsLessonEvents, day);
+      const lessonEventsForDay = lessonService.filterLessonEventsForDay(rowsLessonEvents, day);
 
       for (let hour = 0; hour < 24; hour++) {
 
         const checkDate = this.createHourlyDate(day, hour);
         // console.log('Check date is:', checkDate);
 
-        if (lessonEventService.isHourOfLessonEvents(hour, lessonEventsForDay)) {
+        if (lessonService.isHourOfLessonEvents(hour, lessonEventsForDay)) {
           console.log('Found lesson event for an hour', hour);
           // not adding
 
@@ -263,6 +266,50 @@ class ScheduleService {
     }
 
     return ranges;
+  }
+
+  findScheduleRangesByTeachers(customerIds, startDate, endDate, isLookupLessonEvents) {
+
+    console.log('Customers:', customerIds);
+
+    const scheduleRangeModel = app.models.ScheduleRange;
+
+    // _all_ regular ranges and ad_hoc between the dates
+    const filterRegular = {
+      where: {
+        customerId: {inq: [customerIds]},
+        regularity: ScheduleRangeRegularityEnum.REGULAR,
+      },
+    };
+
+    const filterAdHoc = {
+      where: {
+        customerId: {inq: [customerIds]},
+        regularity: ScheduleRangeRegularityEnum.AD_HOC,
+        date: {between: [startDate, endDate]},
+      },
+    };
+
+    const findStack = [
+      scheduleRangeModel.find(filterRegular),
+      scheduleRangeModel.find(filterAdHoc),
+    ];
+
+    if (isLookupLessonEvents) {
+      const LessonEvent = app.models.LessonEvent;
+      const filterLessonEvents = {
+        where: {
+          startTime: {between: [startDate, endDate]},
+          state: {neq: LessonEventStateEnum.CANCELED},
+        },
+      };
+
+      findStack.push(LessonEvent.find(filterLessonEvents));
+    }
+
+    return Promise.all(
+      findStack
+    );
   }
 
 }

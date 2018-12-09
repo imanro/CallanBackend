@@ -24,7 +24,7 @@
       "type": "string"
     },
     "created": {
-      "type":"date",
+      "type": "date",
       "defaultFn": "now"
     }
   },
