@@ -22,6 +22,14 @@
       "type": "number",
       "required": true,
       "default": 0
+    },
+    "google_api_access_token": {
+      "type": "string",
+      "required": false
+    },
+    "google_api_refresh_token": {
+      "type": "string",
+      "required": false
     }
   },
   "validations": [],
@@ -32,6 +40,11 @@
       "foreignKey": "principalId",
       "through": "RoleMapping",
       "keyThrough": "roleId"
+    },
+    "Timezone": {
+      "type": "belongsTo",
+      "model": "TimeZone",
+      "foreignKey": "timezoneId"
     }
   },
   "acls": [
@@ -100,7 +113,27 @@
       "principalId": "admin",
       "permission": "ALLOW",
       "property": "create"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "checkGoogleAuth"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "authGoogle"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "handleGoogleAuthRedirect"
     }
+
+
   ],
   "methods": {}
 }

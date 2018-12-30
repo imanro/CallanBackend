@@ -1,0 +1,19 @@
+{
+  "mailerService": {
+    "host": "",
+    "port": "",
+    "secure": false,
+    "user": "",
+    "password": "",
+    "from": ""
+  },
+  "googleApiService": {
+    "clientId": "",
+    "clientSecret": "",
+    "redirectUrl": ""
+  },
+  "general": {
+    "siteName": "Callan Web-site",
+    "siteShortName": "Callan"
+  }
+}

@@ -237,7 +237,7 @@ class LessonService {
         checkDate.setMinutes(checkDate.getMinutes() + instance.duration);
 
         // FIXME
-аааа        // checkDate.setDate(checkDate.getDate() - 3);
+        // checkDate.setDate(checkDate.getDate() - 3);
         // console.log('To check', checkDate);
 
 

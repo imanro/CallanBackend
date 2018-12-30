@@ -1,8 +1,8 @@
 'use strict';
 
 const HttpErrors = require('http-errors');
-var app = require('../../server/server');
-var LessonEventStateEnum = require('../enums/lesson-event.state.enum');
+const app = require('../../server/server');
+const LessonEventStateEnum = require('../enums/lesson-event.state.enum');
 const CourseTeacherChoiceEnum = require('../enums/course.teacher-choice.enum');
 const container = require('../conf/configure-container');
 
@@ -10,6 +10,12 @@ const container = require('../conf/configure-container');
 const lessonService = container.resolve('lessonService');
 /** @type CustomerService */
 const customerService = container.resolve('customerService');
+
+/** @type MailNotificationService */
+const mailNotificationService = container.resolve('mailNotificationService');
+
+/** @type GoogleApiService */
+const googleApiService = container.resolve('googleApiService');
 
 /** @type ActivityLogService */
 const activityLogService = container.resolve('activityLogService');
@@ -101,6 +107,32 @@ module.exports = function(LessonEventModel) {
       } else {
         return true;
       }
+    }).then(() => {
+      console.log('Try to notify Teacher');
+
+      googleApiService.createLessonCalendarEvent(instance.teacherId, instance.id)
+        .then(res => {
+          if (!res) {
+            console.log('Teacher has not configured API yet, exiting...')
+          } else {
+            console.log('The new lesson event has been written for Teacher!:)')
+          }
+        });
+    }).then(() => {
+      console.log('Try to notify Student');
+
+      googleApiService.createLessonCalendarEvent(instance.studentId, instance.id)
+        .then(res => {
+          if (!res) {
+            console.log('Student has not configured API yet, exiting...')
+          } else {
+            console.log('The new lesson event has been written for Student!:)')
+          }
+        });
+
+    }).then(() => {
+      return mailNotificationService.notifyTeacherLessonEventCreated(instance.id);
+
     }).catch(err => {
       console.error('An error occurred', err);
     });

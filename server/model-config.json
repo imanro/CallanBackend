@@ -73,5 +73,9 @@
   "CourseCompetence": {
     "dataSource": "mysqlDs",
     "public": true
+  },
+  "TimeZone": {
+    "dataSource": "mysqlDs",
+    "public": true
   }
 }

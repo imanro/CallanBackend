@@ -32,6 +32,12 @@ class DateService {
     return range;
   }
 
+  convertToTimezone(date, id) {
+    // get timezone name
+
+    // convert
+  }
+
 }
 
 module.exports = DateService;

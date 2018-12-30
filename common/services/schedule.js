@@ -277,7 +277,7 @@ class ScheduleService {
     // _all_ regular ranges and ad_hoc between the dates
     const filterRegular = {
       where: {
-        customerId: {inq: [customerIds]},
+        customerId: {inq: customerIds},
         regularity: ScheduleRangeRegularityEnum.REGULAR,
       },
     };
@@ -301,6 +301,7 @@ class ScheduleService {
         where: {
           startTime: {between: [startDate, endDate]},
           state: {neq: LessonEventStateEnum.CANCELED},
+          teacherId: {inq: customerIds}
         },
       };
 

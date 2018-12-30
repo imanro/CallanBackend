@@ -24,17 +24,21 @@ class CustomerService {
   }
 
   assignCustomerRoles(userId, roles) {
-    var RoleMapping = app.models.RoleMapping;
+    if (roles) {
+      var RoleMapping = app.models.RoleMapping;
 
-    // delete first previous
-    return RoleMapping.destroyAll({principalType: RoleMapping.USER, principalId: userId})
-      .then(() => {
-        const roleData = [];
-        for (const role of roles) {
-          roleData.push({principalType: RoleMapping.USER, principalId: userId, roleId: role.id});
-        }
-        return RoleMapping.create(roleData);
-      });
+      // delete first previous
+      return RoleMapping.destroyAll({principalType: RoleMapping.USER, principalId: userId})
+        .then(() => {
+          const roleData = [];
+          for (const role of roles) {
+            roleData.push({principalType: RoleMapping.USER, principalId: userId, roleId: role.id});
+          }
+          return RoleMapping.create(roleData);
+        });
+    } else {
+      return Promise.resolve();
+    }
   }
 
   getCustomerIdByToken(token) {
