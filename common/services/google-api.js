@@ -34,7 +34,7 @@ class GoogleApiService {
         this.getCustomerByRefreshToken(tokens.refresh_token)
           .then(customer => {
             if (customer) {
-              this.storeCustomerCredentials(tokens);
+              this.storeCustomerCredentials(customer, tokens);
             }
         });
       }
