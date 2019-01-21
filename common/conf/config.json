@@ -12,6 +12,9 @@
     "clientSecret": "",
     "redirectUrl": ""
   },
+  "scheduleService": {
+    "scheduleMinuteStep": 15
+  },
   "general": {
     "siteName": "Callan Web-site",
     "siteShortName": "Callan"

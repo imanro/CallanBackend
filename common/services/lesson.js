@@ -20,16 +20,17 @@ class LessonService {
     }
   }
 
-  isHourOfLessonEvent(hour, lessonEvent) {
-    return lessonEvent.startTime.getHours() <= hour && lessonEvent._endTime.getHours() > hour;
+  isDateOfLessonEvent(date, lessonEvent) {
+    console.log('checking');
+    return lessonEvent.startTime.getTime() <= date.getTime() && lessonEvent._endTime.getTime() > date.getTime();
   }
 
-  isHourOfLessonEvents(hour, lessonEvents) {
+  isDateOfLessonEvents(date, lessonEvents) {
 
     for (const i in lessonEvents) {
       if (lessonEvents.hasOwnProperty(i)) {
         const lessonEvent = lessonEvents[i];
-        if (this.isHourOfLessonEvent(hour, lessonEvent)) {
+        if (this.isDateOfLessonEvent(date, lessonEvent)) {
           return true;
         }
       }

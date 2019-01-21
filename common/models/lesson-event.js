@@ -51,7 +51,7 @@ module.exports = function(LessonEventModel) {
 
           ctx.args.data.teacherId = courseProgress.PrimaryTeacher.id;
           // for logging purposes
-          ctx.args.data.teacherInstance = courseProgress.PrimaryTeacher.id;
+          ctx.args.data.teacherInstance = courseProgress.PrimaryTeacher;
         }
 
         return true;
@@ -98,6 +98,7 @@ module.exports = function(LessonEventModel) {
       );
     }).then(() => {
       if (instance.teacherInstance) {
+
         return activityLogService.logLessonEventTeacherAssignement(
           initiatorId,
           instance.studentId,

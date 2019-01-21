@@ -51,6 +51,13 @@ class ScheduleService {
     return date;
   }
 
+  createMinuteDate(day, hour, minutes) {
+    const date = new Date(day.getTime());
+    date.setHours(hour);
+    date.setMinutes(minutes);
+    return date;
+  }
+
   convertScheduleRangeToDates(scheduleRange) {
 
     // for regular time range - dayOfWeek + deal with it
@@ -168,6 +175,9 @@ class ScheduleService {
     /** @type LessonService */
     const lessonService = container.resolve('lessonService');
 
+    /** @type ConfigService */
+    const configService = container.resolve('configService');
+
     // filter only with dates
     rowsAdHoc = rowsAdHoc.filter(function(row) {
       return row.date;
@@ -206,9 +216,6 @@ class ScheduleService {
     const adHocInclusiveRangesDates = this.convertScheduleRangesToDates(rowsAdHocInclusive);
     const adHocExclusiveRangesDates = this.convertScheduleRangesToDates(rowsAdHocExclusive);
 
-    console.log('Converted:', regularInclusiveRangesDates);
-    console.log(' ah:', rowsAdHocExclusive, adHocExclusiveRangesDates);
-
     // create range from startDate and endDate
     const days = dateService.createDaysRange(startDate, endDate, true);
 
@@ -217,6 +224,8 @@ class ScheduleService {
 
     const ranges = [];
 
+    const minuteStep = configService.getValue('scheduleService.scheduleMinuteStep') || 60;
+
     for (const day of days) {
 
       console.log('checking day', day);
@@ -224,42 +233,49 @@ class ScheduleService {
 
       for (let hour = 0; hour < 24; hour++) {
 
-        const checkDate = this.createHourlyDate(day, hour);
-        // console.log('Check date is:', checkDate);
+        for (let minute = 0; minute < 60; minute += minuteStep) {
 
-        if (lessonService.isHourOfLessonEvents(hour, lessonEventsForDay)) {
-          console.log('Found lesson event for an hour', hour);
-          // not adding
+          console.log('checking', minute);
 
-        } else {
+          const checkDate = this.createMinuteDate(day, hour, minute);
+          console.log('Check date is:', checkDate);
 
-          if (this.isDateInRanges(checkDate, adoptedRegularInclusiveRangesDates)) {
-            console.log('is');
-            if (this.isDateInRanges(checkDate, adoptedRegularExclusiveRangesDates)) {
+          if (lessonService.isDateOfLessonEvents(checkDate, lessonEventsForDay)) {
+            console.log('Found lesson event for an hour', hour);
+            // not adding
+
+          } else {
+
+            console.log('nf');
+            if (this.isDateInRanges(checkDate, adoptedRegularInclusiveRangesDates)) {
+              console.log('is');
+              if (this.isDateInRanges(checkDate, adoptedRegularExclusiveRangesDates)) {
+                if (this.isDateInRanges(checkDate, adHocInclusiveRangesDates)) {
+                  ranges.push(checkDate);
+
+                } else {
+                  // not adding
+                  ;
+                }
+              } else {
+
+                if (this.isDateInRanges(checkDate, adHocExclusiveRangesDates)) {
+                  // not adding
+
+                } else {
+                  ranges.push(checkDate);
+                }
+              }
+
+            } else {
               if (this.isDateInRanges(checkDate, adHocInclusiveRangesDates)) {
                 ranges.push(checkDate);
-
               } else {
                 // not adding
                 ;
               }
-            } else {
-
-              if (this.isDateInRanges(checkDate, adHocExclusiveRangesDates)) {
-                // not adding
-
-              } else {
-                ranges.push(checkDate);
-              }
             }
 
-          } else {
-            if (this.isDateInRanges(checkDate, adHocInclusiveRangesDates)) {
-              ranges.push(checkDate);
-            } else {
-              // not adding
-              ;
-            }
           }
         }
       }

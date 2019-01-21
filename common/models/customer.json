@@ -18,6 +18,10 @@
       "type": "string",
       "required": false
     },
+    "description": {
+      "type": "string",
+      "required": false
+    },
     "availableHourInAdvanceMin": {
       "type": "number",
       "required": true,

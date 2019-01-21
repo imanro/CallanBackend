@@ -11,7 +11,7 @@ const container = require('../conf/configure-container');
 
 module.exports = function(ScheduleRangeModel) {
 
-  ScheduleRangeModel.availableHours = function(startDate, endDate, courseProgressId, customerId, isLookupLessonEvents) {
+  ScheduleRangeModel.availableDates = function(startDate, endDate, courseProgressId, customerId, isLookupLessonEvents) {
 
     console.log('TZ offset on API server is', new Date().getTimezoneOffset());
 
@@ -63,7 +63,7 @@ module.exports = function(ScheduleRangeModel) {
 
   };
 
-  ScheduleRangeModel.remoteMethod('availableHours', {
+  ScheduleRangeModel.remoteMethod('availableDates', {
     accepts: [{arg: 'startDate', type: 'date'},
       {arg: 'endDate', type: 'date'},
       {arg: 'courseProgressId', type: 'number'},
