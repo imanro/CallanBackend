@@ -49,10 +49,9 @@ module.exports = function(CustomerModel) {
         })
 
     } else {
-      console.log('Perhaps, timezone is already set');
-      if(instance.timezoneId) {
-        ctx.req.body.timezoneId = instance.timezoneId;
-      }
+      // if(instance.timezoneId) {
+      // ctx.req.body.timezoneId = instance.timezoneId;
+      // }
       return true;
     }
     // find existing, check if it has timezone
@@ -70,6 +69,8 @@ module.exports = function(CustomerModel) {
 
   // to quick detect name of remote-method, see strong-remoting/lib/remote-objects.js:405 (RemoteObjects.prototype.execHooks) (console.log(type))
   CustomerModel.afterRemote('prototype.patchAttributes', async function(ctx, instance) {
+
+    console.log(instance.timezoneId);
 
     return customerService.assignCustomerRoles(instance.id, ctx.req.body.roles)
       .then(() => {
