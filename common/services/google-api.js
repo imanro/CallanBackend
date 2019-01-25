@@ -170,9 +170,13 @@ class GoogleApiService {
 
   createLessonCalendarEvent(customerId, lessonEventId) {
 
-    return this.getAuthorizedClient(customerId)
+    const customerModel = app.models.Customer;
+
+    return Promise.all([this.getAuthorizedClient(customerId), customerModel.findById(customerId)])
     // First, get authorized customer (teacher)
-      .then(auth => {
+      .then(results => {
+
+        const [auth, customer] = results;
 
         if (!auth) {
           return false;
@@ -191,6 +195,7 @@ class GoogleApiService {
 
               const event = {
                 'summary': lessonTitle,
+                'description': customer.description,
                 'start': {
                   'dateTime': lessonEvent.startTime,
                 },
@@ -217,7 +222,7 @@ class GoogleApiService {
                     resolve(false);
                   } else {
                     console.log('Event created: %s', event);
-                    resolve(true);
+                    resolve(event.id);
                   }
                 });
               });

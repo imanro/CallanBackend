@@ -26,6 +26,12 @@
     "created": {
       "type": "date",
       "defaultFn": "now"
+    },
+    "studentGoogleCalendarEventId": {
+      "type": "string"
+    },
+    "teacherGoogleCalendarEventId": {
+      "type": "string"
     }
   },
   "validations": [],

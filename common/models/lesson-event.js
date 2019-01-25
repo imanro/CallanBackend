@@ -116,6 +116,7 @@ module.exports = function(LessonEventModel) {
           if (!res) {
             console.log('Teacher has not configured API yet, exiting...')
           } else {
+            instance.teacherGoogleCalendarEventId = res.id;
             console.log('The new lesson event has been written for Teacher!:)')
           }
         });
@@ -127,10 +128,17 @@ module.exports = function(LessonEventModel) {
           if (!res) {
             console.log('Student has not configured API yet, exiting...')
           } else {
+            instance.studentGoogleCalendarEventId = res.id;
             console.log('The new lesson event has been written for Student!:)')
           }
         });
 
+    }).then(() => {
+      if (instance.teacherGoogleCalendarEventId || instance.studentGoogleCalendarEventId) {
+        return instance.save();
+      } else {
+        return true;
+      }
     }).then(() => {
       return mailNotificationService.notifyTeacherLessonEventCreated(instance.id);
 
