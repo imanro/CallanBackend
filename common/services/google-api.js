@@ -168,15 +168,17 @@ class GoogleApiService {
       });
   }
 
-  createLessonCalendarEvent(customerId, lessonEventId) {
+  createLessonCalendarEvent(lessonEventId, targetCustomerId, studentId) {
 
+    const LessonEventModel = app.models.LessonEvent;
     const customerModel = app.models.Customer;
 
-    return Promise.all([this.getAuthorizedClient(customerId), customerModel.findById(customerId)])
+    return Promise.all([this.getAuthorizedClient(targetCustomerId), customerModel.findById(studentId), LessonEventModel.findById(lessonEventId, {include: ['Student', 'Teacher']})])
     // First, get authorized customer (teacher)
       .then(results => {
 
-        const [auth, customer] = results;
+        const [auth, student, lessonEventObj] = results;
+        const lessonEvent = lessonEventObj.toJSON();
 
         if (!auth) {
           return false;
@@ -184,54 +186,81 @@ class GoogleApiService {
 
         } else {
           const calendar = google.calendar({version: 'v3', auth});
-          const LessonEventModel = app.models.LessonEvent;
+          const lessonTitle = this.createLessonEventCalendarTitle(lessonEvent);
+          const endTime = new Date(lessonEvent.startTime.getTime() + lessonEvent.duration * 60000);
 
-          return LessonEventModel.findById(lessonEventId, {include: ['Student', 'Teacher']})
-            .then(result => {
+          const event = {
+            'summary': lessonTitle,
+            'description': student.description,
+            'start': {
+              'dateTime': lessonEvent.startTime,
+            },
+            'end': {
+              'dateTime': endTime,
+            },
+            'reminders': {
+              'useDefault': false,
+              'overrides': [
+                {'method': 'email', 'minutes': 60},
+                {'method': 'popup', 'minutes': 10},
+              ],
+            },
+          };
 
-              const lessonEvent = result.toJSON();
-              const lessonTitle = this.createLessonEventCalendarTitle(lessonEvent);
-              const endTime = new Date(lessonEvent.startTime.getTime() + lessonEvent.duration * 60000);
-
-              const event = {
-                'summary': lessonTitle,
-                'description': customer.description,
-                'start': {
-                  'dateTime': lessonEvent.startTime,
-                },
-                'end': {
-                  'dateTime': endTime,
-                },
-                'reminders': {
-                  'useDefault': false,
-                  'overrides': [
-                    {'method': 'email', 'minutes': 60},
-                    {'method': 'popup', 'minutes': 10},
-                  ],
-                },
-              };
-
-              return new Promise((resolve) => {
-                calendar.events.insert({
-                  auth: auth,
-                  calendarId: 'primary',
-                  resource: event,
-                }, function(err, event) {
-                  if (err) {
-                    console.error('There was an error contacting the Calendar service: ' + err);
-                    resolve(false);
-                  } else {
-                    console.log('Event created: %s', event);
-                    resolve(event.id);
-                  }
-                });
-              });
-            }).catch(err => {
-              console.error('Error inserting this lesson event :(');
-              throw err;
+          return new Promise((resolve) => {
+            calendar.events.insert({
+              auth: auth,
+              calendarId: 'primary',
+              resource: event,
+            }, function(err, response) {
+              if (err) {
+                console.error('There was an error contacting the Calendar service: ' + err);
+                resolve(false);
+              } else {
+                // strange that insert returns container with status, statusText instead of event itself..
+                const createdEvent = response.data;
+                resolve(createdEvent);
+              }
             });
+          });
         }
+      }).catch(err => {
+        console.error('Error inserting this lesson event :(');
+        throw err;
+      });
+  }
 
+  deleteLessonCalendarEvent(calendarEventId, targetCustomerId) {
+
+    this.getAuthorizedClient(targetCustomerId)
+      .then(auth => {
+
+        if (!auth) {
+          return false;
+          // means not authorized
+        } else {
+          const calendar = google.calendar({version: 'v3', auth});
+
+          return new Promise((resolve) => {
+            calendar.events.delete({
+              auth: auth,
+              calendarId: 'primary',
+              eventId: calendarEventId
+            }, function(err, response) {
+              if (err) {
+                console.error('There was an error contacting the Calendar service: ' + err);
+                resolve(false);
+              } else {
+                // strange that insert returns container with status, statusText instead of event itself..
+                console.log('Sucсessfully deleted!', response);
+                resolve(true);
+              }
+            });
+          });
+        }
+      }).catch(err => {
+        console.error('Error inserting this lesson event :(');
+        throw err;
       });
   }
 

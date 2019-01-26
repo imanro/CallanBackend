@@ -8,8 +8,6 @@ class MailerService {
 
   getTransport() {
 
-    console.log('get transp?');
-
     const container = require('../conf/configure-container');
 
     /** @type ConfigService */
@@ -28,8 +26,6 @@ class MailerService {
           },
         }));
     }
-
-    console.log('the transport now is', this.transport);
 
     return this.transport;
   }

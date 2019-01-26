@@ -111,8 +111,9 @@ module.exports = function(LessonEventModel) {
     }).then(() => {
       console.log('Try to notify Teacher');
 
-      googleApiService.createLessonCalendarEvent(instance.teacherId, instance.id)
+      return googleApiService.createLessonCalendarEvent(instance.id, instance.teacherId, instance.studentId)
         .then(res => {
+          console.log(res, 'result teach');
           if (!res) {
             console.log('Teacher has not configured API yet, exiting...')
           } else {
@@ -123,8 +124,9 @@ module.exports = function(LessonEventModel) {
     }).then(() => {
       console.log('Try to notify Student');
 
-      googleApiService.createLessonCalendarEvent(instance.studentId, instance.id)
+      return googleApiService.createLessonCalendarEvent(instance.id, instance.studentId, instance.studentId)
         .then(res => {
+          console.log(res, 'result stud');
           if (!res) {
             console.log('Student has not configured API yet, exiting...')
           } else {
@@ -134,6 +136,9 @@ module.exports = function(LessonEventModel) {
         });
 
     }).then(() => {
+
+      console.log('ids found', instance.teacherGoogleCalendarEventId, instance.studentGoogleCalendarEventId);
+
       if (instance.teacherGoogleCalendarEventId || instance.studentGoogleCalendarEventId) {
         return instance.save();
       } else {
@@ -255,6 +260,20 @@ module.exports = function(LessonEventModel) {
                 previousBalance,
                 currentBalance
               );
+            }).then(() => {
+              if(instance.studentGoogleCalendarEventId) {
+                console.log('There\'s student event id, trying to delete lesson event from student google calendar');
+                return googleApiService.deleteLessonCalendarEvent(instance.studentGoogleCalendarEventId, instance.studentId)
+              } else {
+                return true;
+              }
+            }).then(() => {
+              if(instance.teacherGoogleCalendarEventId) {
+                console.log('There\'s teacher event id, try to delete lesson event from teacher\'s google calendar');
+                return googleApiService.deleteLessonCalendarEvent(instance.teacherGoogleCalendarEventId, instance.teacherId)
+              } else {
+                return true;
+              }
             })
           );
         } else {
