@@ -20,7 +20,7 @@
       "type": "number",
       "required": true
     },
-    "endMinutes": {
+    "minutesAmount": {
       "type": "number",
       "required": true
     },
@@ -29,11 +29,6 @@
     },
     "date": {
       "type": "date"
-    },
-    "timezoneOffset": {
-      "type": "number",
-      "required": true,
-      "default": 0
     }
   },
   "validations": [],

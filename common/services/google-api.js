@@ -51,21 +51,21 @@ class GoogleApiService {
     return customerModel.findById(customerId)
       .then(customer => {
         return {
-          access_token: customer.google_api_access_token,
-          refresh_token: customer.google_api_refresh_token,
+          access_token: customer.googleApiAccessToken,
+          refresh_token: customer.googleApiRefreshToken,
         }
       });
   }
 
   getCustomerByRefreshToken(refreshToken) {
     const customerModel = app.models.Customer;
-    return customerModel.find({where: {google_api_refresh_token: refreshToken}});
+    return customerModel.find({where: {googleApiRefreshToken: refreshToken}});
   }
 
   storeCustomerCredentials(customer, tokens) {
     return customer.updateAttributes({
-      google_api_access_token: tokens.access_token,
-      google_api_refresh_token: tokens.refresh_token
+      googleApiAccessToken: tokens.access_token,
+      googleApiRefreshToken: tokens.refresh_token
     });
   }
 

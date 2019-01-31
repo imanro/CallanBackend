@@ -161,8 +161,8 @@ module.exports = function(CustomerModel) {
         if (customer) {
           // CHECKME: Perhaps we can ommit this due to "onTokens" event in google-api... No eto ne tochno ))
           return customer.updateAttributes({
-            google_api_access_token: tokens.access_token,
-            google_api_refresh_token: tokens.refresh_token
+            googleApiAccessToken: tokens.access_token,
+            googleApiRefreshToken: tokens.refresh_token
           }).then(() => {
             console.log('Hooray (1)!');
             return true;

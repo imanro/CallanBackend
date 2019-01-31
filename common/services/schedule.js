@@ -86,15 +86,9 @@ class ScheduleService {
 
     startDate.setUTCHours(scheduleRange.startMinutes / 60, scheduleRange.startMinutes % 60);
 
-    // + TZ offset
-    startDate.setUTCHours(startDate.getUTCHours() + (scheduleRange.timezoneOffset / 60));
-
     const endDate = new Date(currentDate.getTime());
 
-    endDate.setUTCHours(scheduleRange.endMinutes / 60, scheduleRange.endMinutes % 60);
-
-    // + TZ offset
-    endDate.setUTCHours(endDate.getUTCHours() + (scheduleRange.timezoneOffset / 60));
+    endDate.setUTCHours(scheduleRange.startMinutes / 60 + Math.floor(scheduleRange.minutesAmount / 60), scheduleRange.minutesAmount % 60);
 
     return [startDate, endDate];
   }
@@ -184,8 +178,8 @@ class ScheduleService {
     });
 
     // setting dayOfWeek for adHoc
-    this.fixLastEndMinute(rowsRegular);
-    this.fixLastEndMinute(rowsAdHoc);
+    // this.fixLastEndMinute(rowsRegular);
+    // this.fixLastEndMinute(rowsAdHoc);
 
     const rowsRegularInclusive = rowsRegular.filter((row) => {
       return row.type === ScheduleRangeTypeEnum.INCLUSIVE;
