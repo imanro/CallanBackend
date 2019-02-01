@@ -32,6 +32,10 @@
       "default": false,
       "nullable": false
     },
+    "created": {
+      "type":"date",
+      "defaultFn": "now"
+    },
     "google_api_access_token": {
       "type": "string",
       "required": false
