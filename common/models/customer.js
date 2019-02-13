@@ -12,6 +12,8 @@ const activityLogService = container.resolve('activityLogService');
 const googleApiService = container.resolve('googleApiService');
 /** @type ConfigService */
 const configService = container.resolve('configService');
+/** @type MailNotificationService */
+const mailNotificationService = container.resolve('mailNotificationService');
 
 const url = require('url');
 
@@ -133,10 +135,15 @@ module.exports = function(CustomerModel) {
 
   CustomerModel.afterRemote('create', async function(ctx, instance) {
 
+    const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
+
     return customerService.assignCustomerRoles(instance.id, ctx.req.body.roles)
       .then(() => {
-        const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
         return activityLogService.logCustomerCreate(initiatorId, instance.id, instance.id)
+      })
+      .then(() => {
+        console.log('Notify');
+        return mailNotificationService.notifyCustomerCreated(instance.id);
       })
       .catch(err => {
         console.error(err, 'occurred');

@@ -334,7 +334,8 @@ module.exports = function(LessonEventModel) {
           if(result) {
             resolve(result);
           } else {
-            reject(new HttpErrors.NotFound('Such lesson event is not found'));
+            resolve();
+            // reject(new HttpErrors.NotFound('Such lesson event is not found'));
           }
         }, err => {
           reject(err);
@@ -356,7 +357,8 @@ module.exports = function(LessonEventModel) {
           if(result) {
             resolve(result);
           } else {
-            reject(new HttpErrors.NotFound('Such lesson event is not found'));
+            resolve();
+            // reject(new HttpErrors.NotFound('Such lesson event is not found'));
           }
         }, err => {
           reject(err);

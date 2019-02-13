@@ -168,6 +168,50 @@ class GoogleApiService {
       });
   }
 
+  getCalendarEvents(customerId, startDate, endDate){
+    // Test auth by trying to read user's calendar
+    return this.getAuthorizedClient(customerId)
+      .then(auth => {
+
+        if (!auth) {
+          return false;
+          // means not authorized
+
+        } else {
+          // try to execute simple request
+          const calendar = google.calendar({version: 'v3', auth});
+
+          return new Promise((resolve) => {
+            calendar.events.list({
+              calendarId: 'primary',
+              timeMin: startDate.toISOString(),
+              timeMax: endDate.toISOString(),
+              // CHECKME
+              maxResults: 250,
+              singleEvents: true,
+              orderBy: 'startTime',
+            }, (err, res) => {
+
+              if (err) {
+                console.log('Ne aljo');
+                resolve(false);
+
+              } else {
+
+                if (res.data.items.length > 0) {
+                  console.log('Received the list of events and the last one is:');
+                  let k = res.data.items.length - 1;
+                  console.log(res.data.items[k]);
+                }
+
+                resolve(res.data.items);
+              }
+            });
+          });
+        }
+      });
+  }
+
   createLessonCalendarEvent(lessonEventId, targetCustomerId, studentId) {
 
     const LessonEventModel = app.models.LessonEvent;
@@ -202,6 +246,7 @@ class GoogleApiService {
               'useDefault': false,
               'overrides': [
                 {'method': 'email', 'minutes': 60},
+                {'method': 'popup', 'minutes': 60},
                 {'method': 'popup', 'minutes': 10},
               ],
             },

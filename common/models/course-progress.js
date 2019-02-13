@@ -5,6 +5,8 @@ const container = require('../conf/configure-container');
 const activityLogService = container.resolve('activityLogService');
 /** @type CustomerService */
 const customerService = container.resolve('customerService');
+/** @type MailNotificationService */
+const mailNotificationService = container.resolve('mailNotificationService');
 
 module.exports = function(CourseProgressModel) {
 
@@ -33,22 +35,44 @@ module.exports = function(CourseProgressModel) {
       if (ctx.args.data.previousInstance) {
         const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
 
-        activityLogService.logBalanceChange(
-          initiatorId,
-          instance.customerId,
-          instance.id,
-          ctx.args.data.previousInstance.lessonEventsBalance,
-          instance.lessonEventsBalance
-        ).then(() => {
+        if(ctx.args.data.previousInstance.lessonEventsBalance !==
+          instance.lessonEventsBalance) {
+          return activityLogService.logBalanceChange(
+            initiatorId,
+            instance.customerId,
+            instance.id,
+            ctx.args.data.previousInstance.lessonEventsBalance,
+            instance.lessonEventsBalance
+          ).then(() => {
+
+            if(ctx.args.data.previousInstance.lessonEventsBalance <
+              instance.lessonEventsBalance) {
+              console.log('Balance increased, notify');
+              return mailNotificationService.notifyBalanceSupplied(instance.id)
+
+            } else {
+              return true;
+            }
+
+            }).then(() => {
+
+
+
+            resolve();
+          }, err => {
+            console.warn('An error occurred during the log creation', err);
+            resolve();
+          });
+
+        } else {
           resolve();
-        }, err => {
-          console.warn('An error occurred during the log creation', err);
-          resolve();
-        });
+        }
 
       } else {
         resolve();
       }
+
+
     });
   });
 };
