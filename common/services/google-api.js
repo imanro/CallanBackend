@@ -144,7 +144,7 @@ class GoogleApiService {
               calendarId: 'primary',
               timeMin: (new Date()).toISOString(),
               maxResults: 1,
-              singleEvents: true,
+              singleEvents: false,
               orderBy: 'startTime',
             }, (err, res) => {
 
