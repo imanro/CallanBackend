@@ -33,7 +33,7 @@
       "nullable": false
     },
     "created": {
-      "type":"date",
+      "type": "date",
       "defaultFn": "now"
     },
     "google_api_access_token": {
@@ -145,6 +145,12 @@
       "principalType": "ROLE",
       "principalId": "$everyone",
       "permission": "ALLOW",
+      "property": "getGoogleCalendarEvents"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
       "property": "authGoogle"
     },
     {
@@ -153,8 +159,6 @@
       "permission": "ALLOW",
       "property": "handleGoogleAuthRedirect"
     }
-
-
   ],
   "methods": {}
 }

@@ -47,28 +47,9 @@ module.exports = function(ScheduleRangeModel) {
         return scheduleService.findScheduleRangesByTeachers(customerIds, startDate, endDate, isLookupLessonEvents);
       }).then(results => {
 
-        if (customerId) {
-          console.log('Asking for the google calendar results');
-
-          // assuming that we need to exclude one teacher's personal events
-          return Promise.all([
-            results,
-            googleApiService.getCalendarEvents(customerId, startDate, endDate),
-          ]);
-        } else {
-          return Promise.all([
-            results,
-            null,
-          ]);
-        }
-
-      }).then(results => {
-
-        if (results[1]) {
-          console.log('We have received googleCalendarResultsToo!!');
-        }
-
-        const [rowsRegular, rowsAdHoc, rowsLessonEvents] = results[0];
+        // apparently, we need to separate google calendar events and dates available; let frontend separately asks
+        // for the dates and for another calendar events, and that combines it in the interface
+        const [rowsRegular, rowsAdHoc, rowsLessonEvents] = results;
 
         // find
         // return [];

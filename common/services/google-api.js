@@ -169,17 +169,28 @@ class GoogleApiService {
   }
 
   getCalendarEvents(customerId, startDate, endDate){
+    // db is alias for memory datasource
+    const memory = app.dataSources.db;
+    const GeneralEvent = memory.buildModelFromInstance(
+      'GeneralEvent',
+      {
+        id: null
+      },
+      {idInjection: true}
+    );
+
     // Test auth by trying to read user's calendar
     return this.getAuthorizedClient(customerId)
       .then(auth => {
 
         if (!auth) {
-          return false;
+          return [];
           // means not authorized
 
         } else {
           // try to execute simple request
           const calendar = google.calendar({version: 'v3', auth});
+          const serachOwnEventsString = this.getConfigService().getValue('general.siteShortName').toLowerCase();
 
           return new Promise((resolve) => {
             calendar.events.list({
@@ -188,23 +199,32 @@ class GoogleApiService {
               timeMax: endDate.toISOString(),
               // CHECKME
               maxResults: 250,
-              singleEvents: true,
-              orderBy: 'startTime',
+              singleEvents: false
             }, (err, res) => {
 
               if (err) {
-                console.log('Ne aljo');
+                console.log('Ne aljo', err);
                 resolve(false);
 
               } else {
 
-                if (res.data.items.length > 0) {
-                  console.log('Received the list of events and the last one is:');
-                  let k = res.data.items.length - 1;
-                  console.log(res.data.items[k]);
+                const stack = [];
+
+                for (const item of res.data.items) {
+                  // this is not callan lesson
+                  console.log(item);
+
+                  if ((item.summary && item.summary.toLowerCase().indexOf(serachOwnEventsString) === -1) && item.start && item.end) {
+                    const generalEvent = new GeneralEvent();
+                    generalEvent.startTime = item.start.dateTime;
+                    generalEvent.endTime = item.end.dateTime;
+                    generalEvent.title = item.summary;
+
+                    stack.push(generalEvent);
+                  }
                 }
 
-                resolve(res.data.items);
+                resolve(stack);
               }
             });
           });
@@ -328,6 +348,11 @@ class GoogleApiService {
     } else {
       return configService.getValue('general.siteShortName') + ' Lesson';
     }
+  }
+
+  getConfigService() {
+    const container = require('../conf/configure-container');
+    return container.resolve('configService');
   }
 
 }

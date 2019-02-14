@@ -229,10 +229,7 @@ class ScheduleService {
 
         for (let minute = 0; minute < 60; minute += minuteStep) {
 
-          console.log('checking', minute);
-
           const checkDate = this.createMinuteDate(day, hour, minute);
-          console.log('Check date is:', checkDate);
 
           if (lessonService.isDateOfLessonEvents(checkDate, lessonEventsForDay)) {
             console.log('Found lesson event for an hour', hour);
@@ -240,9 +237,7 @@ class ScheduleService {
 
           } else {
 
-            console.log('nf');
             if (this.isDateInRanges(checkDate, adoptedRegularInclusiveRangesDates)) {
-              console.log('is');
               if (this.isDateInRanges(checkDate, adoptedRegularExclusiveRangesDates)) {
                 if (this.isDateInRanges(checkDate, adHocInclusiveRangesDates)) {
                   ranges.push(checkDate);

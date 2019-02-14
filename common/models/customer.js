@@ -208,6 +208,10 @@ module.exports = function(CustomerModel) {
     return googleApiService.testAuth(customerId);
   };
 
+  CustomerModel.getGoogleCalendarEvents = function(customerId, startDate, endDate) {
+    return googleApiService.getCalendarEvents(customerId, startDate, endDate);
+  };
+
   CustomerModel.authGoogle = function(ctx) {
     const customerId = customerService.getCustomerIdByToken(ctx.req.accessToken);
 
@@ -337,6 +341,16 @@ module.exports = function(CustomerModel) {
     accepts: [{arg: 'ctx', type: 'object', 'http': {source: 'context'}}],
     http: {verb: 'get'},
     returns: { arg: 'data', type: 'string', root: true},
+  });
+
+  CustomerModel.remoteMethod('getGoogleCalendarEvents', {
+    accepts: [
+      {arg: 'customerId', type: 'number', required: true},
+      {arg: 'startDate', type: 'date'},
+      {arg: 'endDate', type: 'date'},
+    ],
+    returns: {type: 'array', root: true},
+    http: {verb: 'get'},
   });
 
 };
