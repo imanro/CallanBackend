@@ -63,6 +63,7 @@ class GoogleApiService {
   }
 
   storeCustomerCredentials(customer, tokens) {
+
     return customer.updateAttributes({
       googleApiAccessToken: tokens.access_token,
       googleApiRefreshToken: tokens.refresh_token
@@ -145,11 +146,10 @@ class GoogleApiService {
               timeMin: (new Date()).toISOString(),
               maxResults: 1,
               singleEvents: false,
-              orderBy: 'startTime',
             }, (err, res) => {
 
               if (err) {
-                console.log('Ne aljo');
+                console.log('Ne aljo', err);
                 resolve(false);
 
               } else {
@@ -199,7 +199,7 @@ class GoogleApiService {
               timeMax: endDate.toISOString(),
               // CHECKME
               maxResults: 250,
-              singleEvents: false
+              singleEvents: true
             }, (err, res) => {
 
               if (err) {
