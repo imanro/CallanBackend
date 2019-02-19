@@ -168,7 +168,7 @@ class GoogleApiService {
       });
   }
 
-  getCalendarEvents(customerId, startDate, endDate){
+  getCalendarEvents(customerId, startDate, endDate, isIncludeEventTitles = false){
     // db is alias for memory datasource
     const memory = app.dataSources.db;
     const GeneralEvent = memory.buildModelFromInstance(
@@ -218,7 +218,10 @@ class GoogleApiService {
                     const generalEvent = new GeneralEvent();
                     generalEvent.startTime = item.start.dateTime;
                     generalEvent.endTime = item.end.dateTime;
-                    generalEvent.title = item.summary;
+
+                    if (isIncludeEventTitles) {
+                      generalEvent.title = item.summary;
+                    }
 
                     stack.push(generalEvent);
                   }

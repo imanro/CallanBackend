@@ -208,8 +208,9 @@ module.exports = function(CustomerModel) {
     return googleApiService.testAuth(customerId);
   };
 
-  CustomerModel.getGoogleCalendarEvents = function(customerId, startDate, endDate) {
-    return googleApiService.getCalendarEvents(customerId, startDate, endDate);
+  CustomerModel.getGoogleCalendarEvents = function(customerId, startDate, endDate, isIncludeEventTitles = false) {
+
+    return googleApiService.getCalendarEvents(customerId, startDate, endDate, isIncludeEventTitles);
   };
 
   CustomerModel.authGoogle = function(ctx) {
@@ -348,6 +349,7 @@ module.exports = function(CustomerModel) {
       {arg: 'customerId', type: 'number', required: true},
       {arg: 'startDate', type: 'date'},
       {arg: 'endDate', type: 'date'},
+      {arg: 'isIncludeEventTitles', type: 'boolean'},
     ],
     returns: {type: 'array', root: true},
     http: {verb: 'get'},
