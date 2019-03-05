@@ -247,6 +247,24 @@ class GoogleApiService {
         const [auth, student, lessonEventObj] = results;
         const lessonEvent = lessonEventObj.toJSON();
 
+        let attendeesData = [];
+
+        if (student) {
+          attendeesData.push({
+            email: student.email,
+            displayName: student.firstName + ' ' + student.lastName,
+          });
+        }
+
+        const teacher = lessonEvent.Teacher;
+
+        if (teacher) {
+          attendeesData.push({
+            email: teacher.email,
+            displayName: teacher.firstName + ' ' + teacher.lastName,
+          });
+        }
+
         if (!auth) {
           return false;
           // means not authorized
@@ -265,6 +283,7 @@ class GoogleApiService {
             'end': {
               'dateTime': endTime,
             },
+            'attendees': attendeesData,
             'reminders': {
               'useDefault': false,
               'overrides': [
