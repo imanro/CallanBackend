@@ -48,7 +48,8 @@ class LessonService {
     });
   }
 
-  isEnoughtLessonEventsBalance(progressId) {
+
+  isEnoughtMinutesBalance(amount, progressId) {
 
     const CourseProgressModel = app.models.CourseProgress;
 
@@ -56,14 +57,16 @@ class LessonService {
 
       CourseProgressModel.findById(progressId)
         .then(courseProgress => {
-          if(courseProgress) {
-            if (courseProgress.lessonEventsBalance <= 0) {
-              resolve(false);
-            } else {
+
+          if (courseProgress) {
+
+            if (courseProgress.minutesBalance >= amount) {
               resolve(true);
+            } else {
+              resolve(false);
             }
           } else {
-            reject('Could not find the CourseProgress by id')
+            reject('Could not find the CourseProgress by id');
           }
         }, err => {
           reject(err);
@@ -73,7 +76,7 @@ class LessonService {
   }
 
 
-  getLessonEventsBalance(progressId) {
+  getMinutesBalance(progressId) {
 
     const CourseProgressModel = app.models.CourseProgress;
 
@@ -82,7 +85,7 @@ class LessonService {
       CourseProgressModel.findById(progressId)
         .then(courseProgress => {
           if(courseProgress) {
-            resolve(courseProgress.lessonEventsBalance);
+            resolve(courseProgress.minutesBalance);
           } else {
             reject('Could not find the CourseProgress by id')
           }
@@ -93,48 +96,71 @@ class LessonService {
     });
   }
 
-  decrementLessonEventsBalance(progressId) {
+
+  decrementMinutesBalance(lessonEventId, progressId) {
     return new Promise((resolve, reject) => {
-      const CourseProgress = app.models.CourseProgress;
+      const CourseProgressModel = app.models.CourseProgress;
+      const LessonEventModel = app.models.LessonEvent;
 
       if (progressId) {
 
-        CourseProgress.findById(progressId)
-          .then(courseProgress => {
-            courseProgress.lessonEventsBalance -= 1;
+        Promise.all([
+          CourseProgressModel.findById(progressId),
+          LessonEventModel.findById(lessonEventId)
+        ]).then(results => {
+
+          const courseProgress = results[0];
+          const lessonEvent = results[1];
+
+          if (courseProgress && lessonEvent) {
+            courseProgress.minutesBalance -= lessonEvent.duration;
 
             courseProgress.save(function() {
-              console.log('lessonEventsBalance decremented! Now it is', courseProgress.lessonEventsBalance);
-              resolve(courseProgress.lessonEventsBalance);
+              console.log('minutes balance decremented! Now it is', courseProgress.minutesBalance);
+              resolve(courseProgress.minutesBalance);
             });
+          } else {
+            reject('Could not find lessonEvent or courseProgress by ID');
+          }
 
-          }, err => {
-            reject(err);
-          });
+        }, err => {
+          reject(err);
+        });
       } else {
         reject('There is no course progress assigned with this lesson event :(');
       }
     });
   }
 
-  incrementLessonEventsBalance(progressId) {
+  incrementMinutesBalance(lessonEventId, progressId) {
     return new Promise((resolve, reject) => {
-      const CourseProgress = app.models.CourseProgress;
+      const CourseProgressModel = app.models.CourseProgress;
+      const LessonEventModel = app.models.LessonEvent;
 
       if (progressId) {
 
-        CourseProgress.findById(progressId)
-          .then(courseProgress => {
-            courseProgress.lessonEventsBalance += 1;
+        Promise.all([
+          CourseProgressModel.findById(progressId),
+          LessonEventModel.findById(lessonEventId)
+        ]).then(results => {
+
+          const courseProgress = results[0];
+          const lessonEvent = results[1];
+          if (courseProgress && lessonEvent) {
+            courseProgress.minutesBalance += lessonEvent.duration;
 
             courseProgress.save(function() {
-              console.log('lessonEventsBalance incremented! Now it is', courseProgress.lessonEventsBalance);
-              resolve(courseProgress.lessonEventsBalance);
+              console.log('minutesBalance incremented! Now it is', courseProgress.minutesBalance);
+              resolve(courseProgress.minutesBalance);
             });
 
-          }, err => {
-            reject(err);
-          });
+          } else {
+            reject('Could not find lessonEvent or courseProgress by ID');
+          }
+
+        }, err => {
+          reject(err);
+        });
       } else {
         reject('There is no course progress assigned with this lesson event :(');
       }

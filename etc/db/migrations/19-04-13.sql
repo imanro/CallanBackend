@@ -1,0 +1,1 @@
+update courseProgress set minutesBalance = lessonEventsBalance * 60;

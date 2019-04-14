@@ -15,12 +15,20 @@ class ActivityLogService {
 
     const ActivityLogModel = this.getActivityLogModel();
 
+    const container = require('../conf/configure-container');
+
+    /** @type DateService */
+    const dateService = container.resolve('dateService');
+
+    const formattedPreviousValue =  dateService.formatMinutesAsHoursString(previousValue);
+    const formattedCurrentValue =  dateService.formatMinutesAsHoursString(currentValue);
+
     const data = this.createLogData(
       initiatorId,
       affectedId,
       lessonEventId,
       `Balance spent for the lesson event ` +
-      `from ${previousValue} to ${currentValue}`,
+      `from ${formattedPreviousValue} to ${formattedCurrentValue}`,
       ActivityLogRealmEnum.BALANCE,
       ActivityLogActionEnum.BALANCE_SPEND
     );
@@ -35,12 +43,20 @@ class ActivityLogService {
 
     const ActivityLogModel = this.getActivityLogModel();
 
+    const container = require('../conf/configure-container');
+
+    /** @type DateService */
+    const dateService = container.resolve('dateService');
+
+    const formattedPreviousValue =  dateService.formatMinutesAsHoursString(previousValue);
+    const formattedCurrentValue =  dateService.formatMinutesAsHoursString(currentValue);
+
     const data = this.createLogData(
       initiatorId,
       affectedId,
       lessonEventId,
       `Balance refund for lesson event cancellation ` +
-      `from ${previousValue} to ${currentValue}`,
+      `from ${formattedPreviousValue} to ${formattedCurrentValue}`,
       ActivityLogRealmEnum.BALANCE,
       ActivityLogActionEnum.BALANCE_REFUND
     );
@@ -53,14 +69,22 @@ class ActivityLogService {
 
   logBalanceChange(initiatorId, affectedId, courseProgressId, previousValue, currentValue) {
 
+    const container = require('../conf/configure-container');
+
+    /** @type DateService */
+    const dateService = container.resolve('dateService');
+
     const ActivityLogModel = this.getActivityLogModel();
+
+    const formattedPreviousValue =  dateService.formatMinutesAsHoursString(previousValue);
+    const formattedCurrentValue =  dateService.formatMinutesAsHoursString(currentValue);
 
     const data = this.createLogData(
       initiatorId,
       affectedId,
       courseProgressId,
       `Balance changed ` +
-      `from ${previousValue} to ${currentValue}`,
+      `from ${formattedPreviousValue} to ${formattedCurrentValue}`,
       ActivityLogRealmEnum.BALANCE,
       ActivityLogActionEnum.BALANCE_CHANGE
     );

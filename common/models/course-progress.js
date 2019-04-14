@@ -35,14 +35,16 @@ module.exports = function(CourseProgressModel) {
       if (ctx.args.data.previousInstance) {
         const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
 
-        if(ctx.args.data.previousInstance.lessonEventsBalance !==
-          instance.lessonEventsBalance) {
+        if(ctx.args.data.previousInstance.minutesBalance !==
+          instance.minutesBalance) {
+
           return activityLogService.logBalanceChange(
             initiatorId,
             instance.customerId,
             instance.id,
-            ctx.args.data.previousInstance.lessonEventsBalance,
-            instance.lessonEventsBalance
+            ctx.args.data.previousInstance.minutesBalance,
+            instance.minutesBalance
+
           ).then(() => {
 
             if(ctx.args.data.previousInstance.lessonEventsBalance <

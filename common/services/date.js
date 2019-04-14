@@ -38,6 +38,18 @@ class DateService {
     // convert
   }
 
+  formatMinutesAsHoursString(min) {
+    // 119
+    const hoursPart = Math.floor(min / 60);
+    const minutesPart = min % 60;
+
+    if (minutesPart) {
+      return `${hoursPart} h. ${minutesPart} min.`;
+    } else {
+      return `${hoursPart} h.`;
+    }
+  }
+
 }
 
 module.exports = DateService;
