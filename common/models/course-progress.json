@@ -17,6 +17,11 @@
       "default": 0,
       "nullable": false
     },
+    "minutesBalance": {
+      "type": "number",
+      "default": 0,
+      "nullable": false
+    },
     "created": {
       "type": "date",
       "defaultFn": "now"

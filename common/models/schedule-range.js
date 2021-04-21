@@ -9,6 +9,9 @@ var ScheduleRangeTypeEnum = require('../enums/schedule-range.type.enum');
 
 const container = require('../conf/configure-container');
 
+/** @type GoogleApiService */
+const googleApiService = container.resolve('googleApiService');
+
 module.exports = function(ScheduleRangeModel) {
 
   ScheduleRangeModel.availableDates = function(startDate, endDate, courseProgressId, customerId, isLookupLessonEvents) {
@@ -43,13 +46,21 @@ module.exports = function(ScheduleRangeModel) {
 
         return scheduleService.findScheduleRangesByTeachers(customerIds, startDate, endDate, isLookupLessonEvents);
       }).then(results => {
+
+        // apparently, we need to separate google calendar events and dates available; let frontend separately asks
+        // for the dates and for another calendar events, and that combines it in the interface
         const [rowsRegular, rowsAdHoc, rowsLessonEvents] = results;
 
         // find
         // return [];
-        return scheduleService.createHourlyDates(
+        return Promise.all([
+          scheduleService.createHourlyDates(
           startDate, endDate, rowsRegular, rowsAdHoc, rowsLessonEvents
-        );
+        ), 3]);
+      }).then(results => {
+        console.log(results[1]);
+        return results[0];
+
       }).catch(err => {
         // Break execution
         if (err.constructor.name === 'ClientError' || err.constructor.name === 'ServerError') {

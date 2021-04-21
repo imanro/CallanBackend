@@ -63,6 +63,7 @@ class GoogleApiService {
   }
 
   storeCustomerCredentials(customer, tokens) {
+
     return customer.updateAttributes({
       googleApiAccessToken: tokens.access_token,
       googleApiRefreshToken: tokens.refresh_token
@@ -144,12 +145,11 @@ class GoogleApiService {
               calendarId: 'primary',
               timeMin: (new Date()).toISOString(),
               maxResults: 1,
-              singleEvents: true,
-              orderBy: 'startTime',
+              singleEvents: false,
             }, (err, res) => {
 
               if (err) {
-                console.log('Ne aljo');
+                console.log('Ne aljo', err);
                 resolve(false);
 
               } else {
@@ -161,6 +161,73 @@ class GoogleApiService {
                 }
 
                 resolve(true);
+              }
+            });
+          });
+        }
+      });
+  }
+
+  getCalendarEvents(customerId, startDate, endDate, isIncludeEventTitles = false){
+    // db is alias for memory datasource
+    const memory = app.dataSources.db;
+    const GeneralEvent = memory.buildModelFromInstance(
+      'GeneralEvent',
+      {
+        id: null
+      },
+      {idInjection: true}
+    );
+
+    // Test auth by trying to read user's calendar
+    return this.getAuthorizedClient(customerId)
+      .then(auth => {
+
+        if (!auth) {
+          return [];
+          // means not authorized
+
+        } else {
+          // try to execute simple request
+          const calendar = google.calendar({version: 'v3', auth});
+          const serachOwnEventsString = this.getConfigService().getValue('general.siteShortName').toLowerCase();
+
+          return new Promise((resolve) => {
+            calendar.events.list({
+              calendarId: 'primary',
+              timeMin: startDate.toISOString(),
+              timeMax: endDate.toISOString(),
+              // CHECKME
+              maxResults: 250,
+              singleEvents: true
+            }, (err, res) => {
+
+              if (err) {
+                console.log('Ne aljo', err);
+                resolve(false);
+
+              } else {
+
+                const stack = [];
+
+                for (const item of res.data.items) {
+                  // this is not callan lesson
+                  console.log(item);
+
+                  if ((item.summary && item.summary.toLowerCase().indexOf(serachOwnEventsString) === -1) && item.start && item.end) {
+                    const generalEvent = new GeneralEvent();
+                    generalEvent.startTime = item.start.dateTime;
+                    generalEvent.endTime = item.end.dateTime;
+
+                    if (isIncludeEventTitles) {
+                      generalEvent.title = item.summary;
+                    }
+
+                    stack.push(generalEvent);
+                  }
+                }
+
+                resolve(stack);
               }
             });
           });
@@ -180,6 +247,24 @@ class GoogleApiService {
         const [auth, student, lessonEventObj] = results;
         const lessonEvent = lessonEventObj.toJSON();
 
+        let attendeesData = [];
+
+        if (student) {
+          attendeesData.push({
+            email: student.email,
+            displayName: student.firstName + ' ' + student.lastName,
+          });
+        }
+
+        const teacher = lessonEvent.Teacher;
+
+        if (teacher) {
+          attendeesData.push({
+            email: teacher.email,
+            displayName: teacher.firstName + ' ' + teacher.lastName,
+          });
+        }
+
         if (!auth) {
           return false;
           // means not authorized
@@ -198,10 +283,12 @@ class GoogleApiService {
             'end': {
               'dateTime': endTime,
             },
+            'attendees': attendeesData,
             'reminders': {
               'useDefault': false,
               'overrides': [
                 {'method': 'email', 'minutes': 60},
+                {'method': 'popup', 'minutes': 60},
                 {'method': 'popup', 'minutes': 10},
               ],
             },
@@ -283,6 +370,11 @@ class GoogleApiService {
     } else {
       return configService.getValue('general.siteShortName') + ' Lesson';
     }
+  }
+
+  getConfigService() {
+    const container = require('../conf/configure-container');
+    return container.resolve('configService');
   }
 
 }

@@ -33,16 +33,8 @@
       "nullable": false
     },
     "created": {
-      "type":"date",
+      "type": "date",
       "defaultFn": "now"
-    },
-    "google_api_access_token": {
-      "type": "string",
-      "required": false
-    },
-    "google_api_refresh_token": {
-      "type": "string",
-      "required": false
     },
     "googleApiAccessToken": {
       "type": "string",
@@ -145,6 +137,12 @@
       "principalType": "ROLE",
       "principalId": "$everyone",
       "permission": "ALLOW",
+      "property": "getGoogleCalendarEvents"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
       "property": "authGoogle"
     },
     {
@@ -153,8 +151,6 @@
       "permission": "ALLOW",
       "property": "handleGoogleAuthRedirect"
     }
-
-
   ],
   "methods": {}
 }

@@ -12,6 +12,8 @@ const activityLogService = container.resolve('activityLogService');
 const googleApiService = container.resolve('googleApiService');
 /** @type ConfigService */
 const configService = container.resolve('configService');
+/** @type MailNotificationService */
+const mailNotificationService = container.resolve('mailNotificationService');
 
 const url = require('url');
 
@@ -133,10 +135,15 @@ module.exports = function(CustomerModel) {
 
   CustomerModel.afterRemote('create', async function(ctx, instance) {
 
+    const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
+
     return customerService.assignCustomerRoles(instance.id, ctx.req.body.roles)
       .then(() => {
-        const initiatorId = customerService.getCustomerIdByToken(ctx.req.accessToken);
         return activityLogService.logCustomerCreate(initiatorId, instance.id, instance.id)
+      })
+      .then(() => {
+        console.log('Notify');
+        return mailNotificationService.notifyCustomerCreated(instance.id);
       })
       .catch(err => {
         console.error(err, 'occurred');
@@ -199,6 +206,11 @@ module.exports = function(CustomerModel) {
   CustomerModel.checkGoogleAuth = function(ctx) {
     const customerId = customerService.getCustomerIdByToken(ctx.req.accessToken);
     return googleApiService.testAuth(customerId);
+  };
+
+  CustomerModel.getGoogleCalendarEvents = function(customerId, startDate, endDate, isIncludeEventTitles = false) {
+
+    return googleApiService.getCalendarEvents(customerId, startDate, endDate, isIncludeEventTitles);
   };
 
   CustomerModel.authGoogle = function(ctx) {
@@ -330,6 +342,17 @@ module.exports = function(CustomerModel) {
     accepts: [{arg: 'ctx', type: 'object', 'http': {source: 'context'}}],
     http: {verb: 'get'},
     returns: { arg: 'data', type: 'string', root: true},
+  });
+
+  CustomerModel.remoteMethod('getGoogleCalendarEvents', {
+    accepts: [
+      {arg: 'customerId', type: 'number', required: true},
+      {arg: 'startDate', type: 'date'},
+      {arg: 'endDate', type: 'date'},
+      {arg: 'isIncludeEventTitles', type: 'boolean'},
+    ],
+    returns: {type: 'array', root: true},
+    http: {verb: 'get'},
   });
 
 };

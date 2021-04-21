@@ -29,7 +29,7 @@ module.exports = function(LessonEventModel) {
 
     const courseProgressId = ctx.args.data.courseProgressId;
 
-    return lessonService.isEnoughtLessonEventsBalance(courseProgressId)
+    return lessonService.isEnoughtMinutesBalance(ctx.args.data.duration, courseProgressId)
       .then(value => {
         if (value) {
 
@@ -41,7 +41,7 @@ module.exports = function(LessonEventModel) {
               return result.toJSON();
             });
         } else {
-          throw new HttpErrors.BadRequest('There is not enough lessons on customer\'s balance!');
+          throw new HttpErrors.BadRequest('There is not enough hours on balance!');
         }
       })
       .then(courseProgress => {
@@ -78,8 +78,8 @@ module.exports = function(LessonEventModel) {
 
     return Promise.all(
       [
-        lessonService.getLessonEventsBalance(instance.courseProgressId),
-        lessonService.decrementLessonEventsBalance(instance.courseProgressId)
+        lessonService.getMinutesBalance(instance.courseProgressId),
+        lessonService.decrementMinutesBalance(instance.id, instance.courseProgressId)
       ]).then(results => {
 
       const [previousBalance, currentBalance] = results;
@@ -245,8 +245,8 @@ module.exports = function(LessonEventModel) {
 
           resolve(
             Promise.all([
-              lessonService.getLessonEventsBalance(instance.courseProgressId),
-              lessonService.incrementLessonEventsBalance(instance.courseProgressId)
+              lessonService.getMinutesBalance(instance.courseProgressId),
+              lessonService.incrementMinutesBalance(instance.id, instance.courseProgressId)
             ]).then(results => {
 
               const [previousBalance, currentBalance] = results;
@@ -334,7 +334,8 @@ module.exports = function(LessonEventModel) {
           if(result) {
             resolve(result);
           } else {
-            reject(new HttpErrors.NotFound('Such lesson event is not found'));
+            resolve();
+            // reject(new HttpErrors.NotFound('Such lesson event is not found'));
           }
         }, err => {
           reject(err);
@@ -356,7 +357,8 @@ module.exports = function(LessonEventModel) {
           if(result) {
             resolve(result);
           } else {
-            reject(new HttpErrors.NotFound('Such lesson event is not found'));
+            resolve();
+            // reject(new HttpErrors.NotFound('Such lesson event is not found'));
           }
         }, err => {
           reject(err);

@@ -6,10 +6,10 @@ const app = require('../../server/server');
 
 class MailNotificationService {
 
-  notifyTeacherLessonEventCreated(id) {
+  notifyTeacherLessonEventCreated(lessonEventId) {
     const container = require('../conf/configure-container');
 
-    return this.getLessonEvent(id)
+    return this.getLessonEvent(lessonEventId)
       .then(result => {
 
         const lessonEvent = result.toJSON();
@@ -24,27 +24,64 @@ class MailNotificationService {
             timezone = null;
           }
 
-          const data = this.getLessonEventInfo(lessonEvent, timezone, true, false, false);
-          console.log('We\'ve prepared', data + this.getSignature());
+          const text = this.getLessonEventInfo(lessonEvent, timezone, true, false, false);
+          console.log('We\'ve prepared', text + this.getSignature());
 
-          const configService = container.resolve('configService');
-          /** @type ConfigService */
-
-          const mailerService = container.resolve('mailerService');
-          /** @type MailerService */
-
-          return mailerService.sendMail({
+          return this.getMailerService().sendMail({
             'to': lessonEvent.Teacher.email,
-            'from': configService.getValue('mailerService.from'),
+            'from': this.getConfigService().getValue('mailerService.from'),
             'subject': 'You have the new Lesson',
-            'text': data + this.getSignature(),
+            'text': text + this.getSignature(),
           });
         } else {
           return false;
         }
 
       });
+  }
 
+  notifyCustomerCreated(customerId) {
+    return this.getCustomer(customerId)
+      .then(result => {
+        const customer = result.toJSON();
+
+        const text = `Congratulations, ${customer.firstName}!\n\n` +
+          'You have been registered on ' + this.getConfigService().getValue('general.siteShortName') + `.\n` +
+            `Now you can log in there using the link below.`;
+
+        return this.getMailerService().sendMail({
+          'to': customer.email,
+          'from': this.getConfigService().getValue('mailerService.from'),
+          'subject': 'Registration on ' + this.getConfigService().getValue('general.siteShortName'),
+          'text': text + this.getSignature(),
+        });
+      });
+  }
+
+  notifyBalanceSupplied(courseProgressId) {
+    return this.getCourseProgress(courseProgressId)
+      .then(result => {
+        const courseProgress = result.toJSON();
+        const customer = courseProgress.Customer;
+        const course = courseProgress.Course;
+
+        if (!customer || !course) {
+          console.error('There is no related models in the courseProgress model');
+          return true;
+
+        } else {
+          const text = `Hello, ${customer.firstName}!\n\n` +
+            `Your balance was supplied, and now you have ${courseProgress.lessonEventsBalance} lesson(s) in your account for the course ${course.title}.\n` +
+            `Now you can plan your next lesson.`;
+
+          return this.getMailerService().sendMail({
+            'to': customer.email,
+            'from': this.getConfigService().getValue('mailerService.from'),
+            'subject': 'Balance supplied on ' + this.getConfigService().getValue('general.siteShortName'),
+            'text': text + this.getSignature(),
+          });
+        }
+      });
   }
 
   getCustomerFormattedInfo(customer, isContactsShown = false) {
@@ -93,15 +130,47 @@ class MailNotificationService {
     }
   }
 
+  getCustomer(id) {
+    const customerModel = app.models.Customer;
+    return customerModel.findById(id, {include: ['Timezone']});
+  }
+
   getLessonEvent(id) {
     const lessonEventModel = app.models.LessonEvent;
     return lessonEventModel.findById(id, {include: [{Teacher: ['Timezone']}, {Student: ['Timezone']}, {CourseProgress: ['Course']}, {Lesson: ['Course']}]});
   }
 
-  getSignature() {
+  getCourseProgress(id) {
+    const CourseProgressModel = app.models.CourseProgress;
+    return CourseProgressModel.findById(id, {include: ['Course', 'Customer']});
+  }
+
+  /**
+   * @return CustomerService
+   */
+  getCustomerService() {
     const container = require('../conf/configure-container');
-    const configService = container.resolve('configService');
-    return `\n\n----\n` + configService.getValue('general.siteName');
+    return container.resolve('customerService');
+  }
+
+  /**
+   * @return ConfigService
+   */
+  getConfigService() {
+    const container = require('../conf/configure-container');
+    return container.resolve('configService');
+  }
+
+  /**
+   * @return MailerService
+   */
+  getMailerService() {
+    const container = require('../conf/configure-container');
+    return container.resolve('mailerService');
+  }
+
+  getSignature() {
+    return `\n\n----\n` + this.getConfigService().getValue('general.siteName') + `\n` + this.getConfigService().getValue('general.siteUrl');
   }
 
 

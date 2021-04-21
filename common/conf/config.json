@@ -17,6 +17,7 @@
   },
   "general": {
     "siteName": "Callan Web-site",
-    "siteShortName": "Callan"
+    "siteShortName": "Callan",
+    "siteUrl": "http://manro.biz:4003"
   }
 }
