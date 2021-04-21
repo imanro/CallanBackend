@@ -11,7 +11,7 @@ class LessonService {
   assignLessonEventEndTime(lessonEvents) {
     for (let i = 0; i < lessonEvents.length; i++) {
       const lessonEvent = lessonEvents[i];
-
+      ioi();
       if (lessonEvent.startTime) {
         lessonEvent._endTime = new Date();
         lessonEvent._endTime.setTime(lessonEvent.startTime.getTime() + (lessonEvent.duration * 60000));
